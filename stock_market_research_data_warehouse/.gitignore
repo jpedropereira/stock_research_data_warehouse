@@ -5,11 +5,15 @@
 .env
 .env.local
 
+# Data directories (databases, object storage, etc.)
+data/
+
 # Python
 __pycache__/
 .venv
 *.egg-info/
 .python-version
+requirements.txt
 
 # Airflow
 airflow_settings.yaml
