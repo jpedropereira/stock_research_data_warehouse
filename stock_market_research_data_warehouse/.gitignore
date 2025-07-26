@@ -25,5 +25,14 @@ airflow.db
 # Astronomer
 astro
 
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+terraform.tfplan.*
+
 # OS
 .DS_Store
