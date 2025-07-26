@@ -1,0 +1,26 @@
+services:
+  datawarehouse-db:
+    image: postgres:17
+    container_name: datawarehouse-db
+    env_file:
+      - .env.local
+    ports:
+      - "5433:5432"
+    volumes:
+      - datawarehouse_postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: datawarehouse-pgadmin
+    env_file:
+      - .env.local
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - datawarehouse-db
+
+volumes:
+  datawarehouse_postgres_data:
+  pgadmin_data:

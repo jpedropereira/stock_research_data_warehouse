@@ -1,0 +1,9 @@
+airflow:
+  connections:
+    - conn_id: datawarehouse_conn
+      conn_type: postgres
+      host: datawarehouse-db
+      port: 5432
+      schema:
+      login:
+      password:

@@ -1,0 +1,43 @@
+[project]
+name = "stock_market_research_data_warehouse"
+version = "0.1"
+description = "Ignestion and processing pipelines for stock market research project"
+readme = "README.md"
+requires-python = "~=3.12.0"
+dependencies = [
+    "apache-airflow[celery,postgres,amazon]==3.0.3",
+    "psycopg2-binary==2.9.10",
+    "requests==2.32.4",
+]
+
+[dependency-groups]
+dev = [
+    "black",
+    "flake8",
+    "ipython",
+    "python-dotenv",
+    "pytest",
+]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+env_files = ["tests/.env.test"]
+log_cli = "True"
+log_cli_level = "INFO"
+
+[flake8]
+ignore = 'D100,W503,E203'
+max-line-length = 100
