@@ -12,11 +12,15 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "autoflake",
     "black",
     "flake8",
     "ipython",
+    "pre-commit",
+    "pycln",
     "python-dotenv",
     "pytest",
+    "reorder-python-imports",
 ]
 
 [tool.uv]
