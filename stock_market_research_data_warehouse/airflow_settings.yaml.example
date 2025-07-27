@@ -4,6 +4,15 @@ airflow:
       conn_type: postgres
       host: datawarehouse-db
       port: 5432
-      schema:
-      login:
-      password:
+      schema: warehouse
+      login: <username>
+      password: <password>
+
+    - conn_id: minio_conn
+      conn_type: aws
+      extra: {
+        aws_access_key_id: "<airflow-access-key_id>",
+        aws_secret_access_key: "<airflow-access-key>",
+        endpoint_url: "http://minio-datalake:9000",
+        region_name: "us-east-1"
+      }
