@@ -4,6 +4,11 @@ RUN pip install uv
 
 COPY pyproject.toml uv.lock ./
 
-RUN uv sync --frozen --no-dev
+RUN uv export --no-dev --all-extras --no-hashes > requirements.txt
 
-COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY dags/ ./dags/
+COPY plugins/ ./plugins/
+COPY include/ ./include/
+COPY airflow_settings.yaml ./
