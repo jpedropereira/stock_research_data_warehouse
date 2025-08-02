@@ -4,7 +4,7 @@
 
 resource "minio_s3_bucket" "data_source_buckets" {
   for_each = toset([
-    "example-data-source"  # Replace with the first source
+    "stocks-yahoo-finance-data"
   ])
 
   bucket        = "${var.project_name}-${each.key}-${var.environment}"
