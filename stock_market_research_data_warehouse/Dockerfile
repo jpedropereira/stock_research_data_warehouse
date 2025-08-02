@@ -12,3 +12,6 @@ COPY dags/ ./dags/
 COPY plugins/ ./plugins/
 COPY include/ ./include/
 COPY airflow_settings.yaml ./
+
+
+RUN pip install -e .
