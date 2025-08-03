@@ -8,10 +8,10 @@ RUN uv export --no-dev --all-extras --no-hashes > requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY .env ./
 COPY dags/ ./dags/
 COPY plugins/ ./plugins/
 COPY include/ ./include/
 COPY airflow_settings.yaml ./
-
 
 RUN pip install -e .
