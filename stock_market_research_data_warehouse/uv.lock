@@ -288,7 +288,7 @@ wheels = [
 
 [[package]]
 name = "apache-airflow-providers-common-sql"
-version = "1.27.3"
+version = "1.27.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "apache-airflow" },
@@ -296,9 +296,9 @@ dependencies = [
     { name = "more-itertools" },
     { name = "sqlparse" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/c7/88d7a6e7757b52b90ed923a9ad9de7308b9aee4037ff5baeac704c37e7d6/apache_airflow_providers_common_sql-1.27.3.tar.gz", hash = "sha256:5efd7706ea6392eac564cac1652b905d9262c4c39ccc6867ac45831fa0fb98f4", size = 101641 }
+sdist = { url = "https://files.pythonhosted.org/packages/34/4a/19ed45d80896ae10a2922c577e5ab6fcd5127db75097e1566ff64c3ad4e2/apache_airflow_providers_common_sql-1.27.4.tar.gz", hash = "sha256:bfc8fe1534954e081301bb09a7b6771e6132f2856e09953a982481e572d77da7", size = 102056 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/07/5dc81b135b000620bde3466734e21f7a2c2ad9e8f4f0a559de8879f21334/apache_airflow_providers_common_sql-1.27.3-py3-none-any.whl", hash = "sha256:9e796b6a2f932a24c8ad23d8d357a8533365bed333cde5f8fd07d709ab2762ca", size = 65710 },
+    { url = "https://files.pythonhosted.org/packages/63/e2/02de9fe031ed2e3c7741b4281d8f9eaa109ee101bf0709b696b2dd4a5766/apache_airflow_providers_common_sql-1.27.4-py3-none-any.whl", hash = "sha256:77e7b28a04772c05b67f9e16f17a742eed207d5e99d7161712c2bbaf76fce299", size = 65546 },
 ]
 
 [[package]]
@@ -2570,9 +2570,11 @@ version = "0.1"
 source = { editable = "." }
 dependencies = [
     { name = "apache-airflow", extra = ["amazon", "celery", "postgres"] },
+    { name = "apache-airflow-providers-common-sql" },
     { name = "pandas" },
     { name = "psycopg2-binary" },
     { name = "pyarrow" },
+    { name = "python-dotenv" },
     { name = "requests" },
     { name = "yfinance" },
 ]
@@ -2586,16 +2588,17 @@ dev = [
     { name = "pre-commit" },
     { name = "pycln" },
     { name = "pytest" },
-    { name = "python-dotenv" },
     { name = "reorder-python-imports" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "apache-airflow", extras = ["celery", "postgres", "amazon"], specifier = "==3.0.3" },
+    { name = "apache-airflow-providers-common-sql", specifier = "==1.27.4" },
     { name = "pandas", specifier = "==2.3.1" },
     { name = "psycopg2-binary", specifier = "==2.9.10" },
     { name = "pyarrow", specifier = "==21.0.0" },
+    { name = "python-dotenv" },
     { name = "requests", specifier = "==2.32.4" },
     { name = "yfinance", specifier = ">=0.2.65,<0.3.0" },
 ]
@@ -2609,7 +2612,6 @@ dev = [
     { name = "pre-commit" },
     { name = "pycln" },
     { name = "pytest" },
-    { name = "python-dotenv" },
     { name = "reorder-python-imports" },
 ]
 

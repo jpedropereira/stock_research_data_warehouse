@@ -1,37 +1,34 @@
 #!/bin/bash
 set -e
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
--- Create DEV database and schemas
-CREATE DATABASE "DB_SR_DEV";
-EOSQL
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "DB_SR_DEV" <<-EOSQL
-CREATE SCHEMA IF NOT EXISTS "STAGING";
-EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
--- Create PRD database and schemas
-CREATE DATABASE "DB_SR_PRD";
+CREATE DATABASE db_sr_dev;
 EOSQL
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "DB_SR_PRD" <<-EOSQL
-CREATE SCHEMA IF NOT EXISTS "STAGING";
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_dev <<-EOSQL
+CREATE SCHEMA IF NOT EXISTS staging;
 EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
--- Create a dedicated user for the application
+CREATE DATABASE db_sr_prd;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_prd <<-EOSQL
+CREATE SCHEMA IF NOT EXISTS staging;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
 CREATE USER ${AIRFLOW_DB_USER} WITH PASSWORD '${AIRFLOW_DB_PASSWORD}';
-
--- Grant database connection permissions
-GRANT CONNECT ON DATABASE "DB_SR_DEV" TO ${AIRFLOW_DB_USER};
-GRANT CONNECT ON DATABASE "DB_SR_PRD" TO ${AIRFLOW_DB_USER};
+GRANT CONNECT ON DATABASE db_sr_dev TO ${AIRFLOW_DB_USER};
+GRANT CONNECT ON DATABASE db_sr_prd TO ${AIRFLOW_DB_USER};
 EOSQL
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "DB_SR_DEV" <<-EOSQL
-GRANT USAGE, CREATE ON SCHEMA "STAGING" TO ${AIRFLOW_DB_USER};
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_dev <<-EOSQL
+GRANT USAGE, CREATE ON SCHEMA staging TO ${AIRFLOW_DB_USER};
 EOSQL
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "DB_SR_PRD" <<-EOSQL
-GRANT USAGE, CREATE ON SCHEMA "STAGING" TO ${AIRFLOW_DB_USER};
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_prd <<-EOSQL
+GRANT USAGE, CREATE ON SCHEMA staging TO ${AIRFLOW_DB_USER};
 EOSQL

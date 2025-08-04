@@ -1,11 +1,12 @@
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
-from include.stocks.index_history import get_index_symbols_from_wikipedia
-from include.stocks.index_history import get_stocks_historical_data
+from include.stocks.index_history import (
+    get_index_symbols_from_wikipedia,
+    get_stocks_historical_data,
+)
 
 
 class TestGetIndexSymbolsFromWikipedia:
