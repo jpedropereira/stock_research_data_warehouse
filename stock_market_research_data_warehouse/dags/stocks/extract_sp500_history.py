@@ -1,20 +1,21 @@
 from datetime import datetime, timedelta
+from os import path
 from tempfile import NamedTemporaryFile
 
 from airflow.decorators import dag, task
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from include.config import STAGING_SCHEMA, now_tz
+from include.config import PROJECT_ROOT, STAGING_SCHEMA, now_tz
 from include.stocks.constants import BUCKET_STOCKS_YAHOO_FINANCE, INDEXES
 from include.stocks.index_history import (
     get_index_symbols_from_wikipedia,
     get_stocks_historical_data,
 )
-from include.stocks.staging_schemas.historical_data_sp500 import (
-    historical_data_sp500_column_mapping,
-    historical_data_sp500_schema,
-)
+from include.utils import render_ddl
 from plugins.operators import EnforceLatestFileOperator, ExtractToStagingOperator
+
+yaml_path = path.join(PROJECT_ROOT, "include", "raw_files_column_mappings.yaml")
+table_name = "historical_data_sp500"
 
 
 @dag(
@@ -83,7 +84,7 @@ def extract_sp500():
     create_table = SQLExecuteQueryOperator(
         task_id="create_table_if_not_exists",
         conn_id="datawarehouse_conn",
-        sql=historical_data_sp500_schema,
+        sql=render_ddl(column_mapping_yaml_path=yaml_path, table_name=table_name, schema_name=STAGING_SCHEMA),
     )
 
     load_to_staging = ExtractToStagingOperator(
@@ -93,8 +94,8 @@ def extract_sp500():
         object_key="{{ ti.xcom_pull(task_ids='extract_historical_data') }}",
         postgres_conn_id="datawarehouse_conn",
         schema_name=STAGING_SCHEMA,
-        table_name="historical_data_sp500",
-        column_mapping=historical_data_sp500_column_mapping,
+        table_name=table_name,
+        column_mapping_yaml_path=yaml_path,
     )
 
     enforce_lastest_files = EnforceLatestFileOperator(
@@ -102,7 +103,7 @@ def extract_sp500():
         postgres_conn_id="datawarehouse_conn",
         deduplication_columns=["date", "ticker"],
         schema_name=STAGING_SCHEMA,
-        table_name="historical_data_sp500",
+        table_name=table_name,
     )
 
     start_task = start_task()

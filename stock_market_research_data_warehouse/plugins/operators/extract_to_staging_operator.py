@@ -9,6 +9,7 @@ from airflow.models import BaseOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.context import Context
+from include.utils import load_table_config
 
 
 class ExtractToStagingOperator(BaseOperator):
@@ -18,21 +19,27 @@ class ExtractToStagingOperator(BaseOperator):
     This operator:
     1. Downloads a CSV file from MinIO/S3
     2. Reads it into a pandas DataFrame
-    3. Clears existing data for the specified date range (idempotent)
-    4. Performs bulk insert into the staging table
+    3. Loads column mapping and data types from a central YAML config file (by table name)
+    4. Clears existing data for the specified file (idempotent)
+    5. Performs bulk insert into the staging table
 
     :param s3_conn_id: Airflow connection ID for S3/MinIO
     :param bucket_name: Source bucket name
     :param object_key: Object key (file path) in the bucket
     :param postgres_conn_id: Airflow connection ID for PostgreSQL
     :param schema_name: Target schema name
-    :param table_name: Target table name
+    :param table_name: Target table name (used to look up column mapping in YAML)
+    :param column_mapping_yaml_path: Path to YAML file with column mappings
     :param date_column: Column name used for date range filtering (default: 'date')
-    :param file_name_column: Column name used for file-based duplicate prevention
-        (default: 'file_name')
-    :param column_mapping: Dict mapping table column names to CSV column names
-        (required; ensures correct order and mapping)
+    :param file_name_column: Column name used for file-based duplicate prevention (default: 'file_name')
     :param csv_delimiter: CSV delimiter character (default: ',')
+
+    Note:
+        - All column mappings and data types must be defined in the YAML file under the 'tables' key.
+        - Use table_name as the subkey for each table's config.
+        - The loaded mapping is logged for traceability.
+        - No direct column_mapping argument is supported; all mappings are managed centrally in YAML for
+          consistency and maintainability.
     """
 
     template_fields = ("object_key",)
@@ -45,7 +52,7 @@ class ExtractToStagingOperator(BaseOperator):
         postgres_conn_id: str,
         schema_name: str,
         table_name: str,
-        column_mapping: dict[str, str],
+        column_mapping_yaml_path: str,
         date_column: str = "date",
         file_name_column: str = "file_name",
         csv_delimiter: str = ",",
@@ -60,7 +67,7 @@ class ExtractToStagingOperator(BaseOperator):
         self.table_name = table_name
         self.date_column = date_column
         self.file_name_column = file_name_column
-        self.column_mapping = column_mapping
+        self.column_mapping_yaml_path = column_mapping_yaml_path
         self.csv_delimiter = csv_delimiter
 
     def _normalize_data(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -104,18 +111,12 @@ class ExtractToStagingOperator(BaseOperator):
 
     def execute(self, context: Context) -> int:
         """Execute the extraction and staging process."""
-        if not self.column_mapping:
-            raise ValueError(
-                "column_mapping is required and must be provided as a dict "
-                "mapping table columns to CSV columns."
-            )
-        if not isinstance(self.column_mapping, dict) or len(self.column_mapping) == 0:
-            raise ValueError("column_mapping must be a non-empty dictionary.")
-        # Ensure all keys and csv_col values in column_mapping are lower case
-        self.column_mapping = {
-            k.lower(): {"csv_col": v["csv_col"].lower(), "df_dtype": v["df_dtype"]}
-            for k, v in self.column_mapping.items()
-        }
+        self.log.info(f"Resolved YAML path: {self.column_mapping_yaml_path}")
+        column_mapping = load_table_config(
+            column_mapping_yaml_path=self.column_mapping_yaml_path, table_name=self.table_name
+        )
+
+        self.log.info(f"Loaded column mapping: {column_mapping}")
 
         s3_hook = S3Hook(aws_conn_id=self.s3_conn_id)
         postgres_hook = PostgresHook(postgres_conn_id=self.postgres_conn_id)
@@ -138,14 +139,14 @@ class ExtractToStagingOperator(BaseOperator):
 
         data[self.file_name_column.lower()] = self.object_key
 
-        self.column_mapping[self.file_name_column.lower()] = {
+        column_mapping[self.file_name_column.lower()] = {
             "csv_col": self.file_name_column.lower(),
             "df_dtype": "str",
         }
 
-        self.log.info(f"Applying column mapping: {self.column_mapping}")
+        self.log.info(f"Applying column mapping: {column_mapping}")
 
-        rename_map = {v["csv_col"]: k for k, v in self.column_mapping.items()}
+        rename_map = {v["csv_col"]: k for k, v in column_mapping.items()}
         selected_csv_cols = list(rename_map.keys())
 
         missing_csv_cols = set(selected_csv_cols) - set(data.columns)
@@ -158,7 +159,7 @@ class ExtractToStagingOperator(BaseOperator):
         self.log.info(f"Final columns for database: {data.columns.tolist()}")
 
         # Cast columns to specified dtypes
-        for col, val in self.column_mapping.items():
+        for col, val in column_mapping.items():
             dtype = val["df_dtype"]
             if dtype == "int":
                 data[col] = data[col].fillna(0).astype(int)
@@ -177,8 +178,6 @@ class ExtractToStagingOperator(BaseOperator):
 
         self.log.info(f"Clearing existing records with {self.file_name_column}: {file_name}")
         postgres_hook.run(delete_sql, parameters=(file_name,))
-
-        # TODO: ADD LOGIC TO KEEP ONLY THE LATEST RECORDS FOR A GIVEN COMBINATION COLUMNS
 
         self.log.info("Preparing data for COPY operation")
 
