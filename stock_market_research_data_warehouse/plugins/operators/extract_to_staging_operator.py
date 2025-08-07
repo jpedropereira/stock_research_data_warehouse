@@ -25,7 +25,6 @@ class ExtractToStagingOperator(BaseOperator):
     :param bucket_name: Source bucket name
     :param object_key: Object key (file path) in the bucket
     :param postgres_conn_id: Airflow connection ID for PostgreSQL
-    :param database_name: Target database name
     :param schema_name: Target schema name
     :param table_name: Target table name
     :param date_column: Column name used for date range filtering (default: 'date')
@@ -36,13 +35,7 @@ class ExtractToStagingOperator(BaseOperator):
     :param csv_delimiter: CSV delimiter character (default: ',')
     """
 
-    template_fields = [
-        "bucket_name",
-        "object_key",
-        "database_name",
-        "schema_name",
-        "table_name",
-    ]
+    template_fields = ("object_key",)
 
     def __init__(
         self,
@@ -50,7 +43,6 @@ class ExtractToStagingOperator(BaseOperator):
         bucket_name: str,
         object_key: str,
         postgres_conn_id: str,
-        database_name: str,
         schema_name: str,
         table_name: str,
         column_mapping: dict[str, str],
@@ -64,7 +56,6 @@ class ExtractToStagingOperator(BaseOperator):
         self.bucket_name = bucket_name
         self.object_key = object_key
         self.postgres_conn_id = postgres_conn_id
-        self.database_name = database_name
         self.schema_name = schema_name
         self.table_name = table_name
         self.date_column = date_column
@@ -129,9 +120,7 @@ class ExtractToStagingOperator(BaseOperator):
         s3_hook = S3Hook(aws_conn_id=self.s3_conn_id)
         postgres_hook = PostgresHook(postgres_conn_id=self.postgres_conn_id)
 
-        self.log.info(
-            f"Reading {self.object_key} directly from bucket {self.bucket_name}"
-        )
+        self.log.info(f"Reading {self.object_key} directly from bucket {self.bucket_name}")
 
         s3_object = s3_hook.get_key(self.object_key, self.bucket_name)
         csv_content = s3_object.get()["Body"].read()
@@ -186,9 +175,7 @@ class ExtractToStagingOperator(BaseOperator):
         WHERE {self.file_name_column} = %s;
         """
 
-        self.log.info(
-            f"Clearing existing records with {self.file_name_column}: {file_name}"
-        )
+        self.log.info(f"Clearing existing records with {self.file_name_column}: {file_name}")
         postgres_hook.run(delete_sql, parameters=(file_name,))
 
         # TODO: ADD LOGIC TO KEEP ONLY THE LATEST RECORDS FOR A GIVEN COMBINATION COLUMNS
@@ -198,15 +185,11 @@ class ExtractToStagingOperator(BaseOperator):
         # Use temporary file only for the COPY operation
         with self._temporary_file() as tmp_file_path:
             # Write normalized data to temporary file for COPY
-            data.to_csv(
-                tmp_file_path, index=False, header=False, sep=self.csv_delimiter
-            )
+            data.to_csv(tmp_file_path, index=False, header=False, sep=self.csv_delimiter)
 
             # Perform bulk insert using PostgreSQL COPY command
             full_table_name = f"{self.schema_name}.{self.table_name}"
-            self.log.info(
-                f"Inserting {len(data)} records into {full_table_name} using COPY"
-            )
+            self.log.info(f"Inserting {len(data)} records into {full_table_name} using COPY")
 
             try:
                 # Use COPY command for efficient bulk insert with all columns
@@ -220,20 +203,14 @@ class ExtractToStagingOperator(BaseOperator):
 
             except psycopg2.DatabaseError as e:
                 self.log.error(
-                    f"Database error during COPY: {e} | Table: {full_table_name} | "
-                    f"File: {self.object_key}"
+                    f"Database error during COPY: {e} | Table: {full_table_name} | " f"File: {self.object_key}"
                 )
-                raise AirflowException(
-                    f"Failed to load {self.object_key} into {full_table_name}: {e}"
-                )
+                raise AirflowException(f"Failed to load {self.object_key} into {full_table_name}: {e}")
             except Exception as e:
                 self.log.error(
-                    f"Unexpected error during COPY: {e} | Table: {full_table_name} | "
-                    f"File: {self.object_key}"
+                    f"Unexpected error during COPY: {e} | Table: {full_table_name} | " f"File: {self.object_key}"
                 )
-                raise AirflowException(
-                    f"Failed to load {self.object_key} into {full_table_name}: {e}"
-                )
+                raise AirflowException(f"Failed to load {self.object_key} into {full_table_name}: {e}")
 
             self.log.info(f"Successfully loaded {len(data)} records using COPY")
             return len(data)

@@ -4,7 +4,7 @@ from tempfile import NamedTemporaryFile
 from airflow.decorators import dag, task
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from include.config import DATABASE_NAME, STAGING_SCHEMA, now_tz
+from include.config import STAGING_SCHEMA, now_tz
 from include.stocks.constants import BUCKET_STOCKS_YAHOO_FINANCE, INDEXES
 from include.stocks.index_history import (
     get_index_symbols_from_wikipedia,
@@ -14,7 +14,7 @@ from include.stocks.staging_schemas.historical_data_sp500 import (
     historical_data_sp500_column_mapping,
     historical_data_sp500_schema,
 )
-from plugins.operators import ExtractToStagingOperator
+from plugins.operators import EnforceLatestFileOperator, ExtractToStagingOperator
 
 
 @dag(
@@ -41,6 +41,14 @@ def extract_sp500():
     """
 
     @task()
+    def start_task():
+        return None
+
+    @task()
+    def end_task():
+        return None
+
+    @task()
     def extract_symbols():
         url = INDEXES["SP500"]["wikipage_url"]
         return get_index_symbols_from_wikipedia(url)
@@ -51,9 +59,7 @@ def extract_sp500():
         s3_hook = S3Hook(aws_conn_id="minio_conn")
 
         conf = kwargs.get("dag_run").conf if kwargs.get("dag_run") else {}
-        start_date = (
-            conf.get("extract_start_date") or kwargs["params"]["extract_start_date"]
-        )
+        start_date = conf.get("extract_start_date") or kwargs["params"]["extract_start_date"]
         end_date = conf.get("extract_end_date") or kwargs["params"]["extract_end_date"]
 
         timestamp = now_tz().strftime("%Y%m%d_%H%M%S")
@@ -86,16 +92,32 @@ def extract_sp500():
         bucket_name=BUCKET_STOCKS_YAHOO_FINANCE,
         object_key="{{ ti.xcom_pull(task_ids='extract_historical_data') }}",
         postgres_conn_id="datawarehouse_conn",
-        database_name=DATABASE_NAME,
         schema_name=STAGING_SCHEMA,
         table_name="historical_data_sp500",
         column_mapping=historical_data_sp500_column_mapping,
     )
 
+    enforce_lastest_files = EnforceLatestFileOperator(
+        task_id="enforce_lastest_files",
+        postgres_conn_id="datawarehouse_conn",
+        deduplication_columns=["date", "ticker"],
+        schema_name=STAGING_SCHEMA,
+        table_name="historical_data_sp500",
+    )
+
+    start_task = start_task()
+    end_task = end_task()
     extract_symbols = extract_symbols()
     extract_historical_data = extract_historical_data(extract_symbols)
 
-    extract_symbols >> [extract_historical_data, create_table] >> load_to_staging
+    (
+        start_task
+        >> extract_symbols
+        >> [extract_historical_data, create_table]
+        >> load_to_staging
+        >> enforce_lastest_files
+        >> end_task
+    )
 
 
 extract_sp500()
