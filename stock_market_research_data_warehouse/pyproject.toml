@@ -36,7 +36,16 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["tests*"]
+exclude = [
+    "tests*",
+    "data*",
+    "terraform*",
+    "docs*",
+    "scripts*",
+    ".venv*",
+    "env*",
+    "__pycache__*"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
