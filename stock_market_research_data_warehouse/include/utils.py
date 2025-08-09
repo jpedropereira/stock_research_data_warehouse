@@ -23,6 +23,8 @@ def render_ddl(column_mapping_yaml_path, table_name, schema_name):
     with open(column_mapping_yaml_path) as f:
         mappings = yaml.safe_load(f)
     table_cfg = mappings["tables"].get(table_name)
+    if table_cfg is None:
+        raise ValueError(f"Table '{table_name}' not found in YAML config.")
     ddl = table_cfg.get("ddl")
     if not ddl:
         raise ValueError(f"No DDL found for table '{table_name}' in YAML config.")

@@ -43,7 +43,6 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-env_files = ["tests/.env.test"]
 log_cli = "True"
 log_cli_level = "INFO"
 
