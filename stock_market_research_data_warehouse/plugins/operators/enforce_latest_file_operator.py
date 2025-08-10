@@ -48,6 +48,8 @@ class EnforceLatestFileOperator(BaseOperator):
         self.timestamp_in_file_name = timestamp_in_file_name
 
     def execute(self, context: Context):
+        if not self.deduplication_columns:
+            raise ValueError("deduplication_columns must not be empty")
 
         postgres_hook = PostgresHook(postgres_conn_id=self.postgres_conn_id)
 
