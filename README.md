@@ -12,14 +12,14 @@ This project has three main goals: It serves to showcase my skills as a data eng
 
 ## Tech Stack
 
-- Orchestration: Airflow (Astronomer's distro)
-- Object Storage: MinIO (S3 compatible)
-- Infrastructure as Code: Terraform
-- Data Warehouse: Postgres
-- Data Modeling: Data Vault 2.0
-- Data Transformation: DBT (Data Build Tool)
-- Dependency Management: UV
-- Python 3.12
+- Orchestration: `Airflow` (Astronomer's distro)
+- Object Storage: `MinIO` (`S3` compatible)
+- Infrastructure as Code: `Terraform`
+- Data Warehouse: `Postgres`
+- Data Modeling: `Data Vault 2.0`
+- Data Transformation: `DBT` (`Data Build Tool`)
+- Dependency Management: `uv`
+- `Python 3.12`
 
 ## Setup Instructions
 
@@ -27,8 +27,7 @@ This project has three main goals: It serves to showcase my skills as a data eng
 - Python 3.12
 - Docker & Docker Compose
 - Terraform
-- MinIO
-- Postgres
+- uv
 
 ### Installation and Local Environment Setup
 ```bash
