@@ -2,11 +2,12 @@ from datetime import datetime, timedelta
 from os import path
 from tempfile import NamedTemporaryFile
 
+import yaml
 from airflow.decorators import dag, task
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from include.config import PROJECT_ROOT, STAGING_SCHEMA, now_tz
-from include.stocks.constants import BUCKET_STOCKS_YAHOO_FINANCE, INDEXES
+from include.stocks.constants import BUCKET_STOCKS_YAHOO_FINANCE
 from include.stocks.index_history import (
     get_index_symbols_from_wikipedia,
     get_stocks_historical_data,
@@ -51,7 +52,9 @@ def extract_sp500():
 
     @task()
     def extract_symbols():
-        url = INDEXES["SP500"]["wikipage_url"]
+        with open(path.join(PROJECT_ROOT, "include", "stocks", "indexes.yaml"), "r") as f:
+            indexes = yaml.safe_load(f)
+        url = indexes["SP500"]["wikipage_url"]
         return get_index_symbols_from_wikipedia(url)
 
     @task()
@@ -84,7 +87,9 @@ def extract_sp500():
     create_table = SQLExecuteQueryOperator(
         task_id="create_table_if_not_exists",
         conn_id="datawarehouse_conn",
-        sql=render_ddl(column_mapping_yaml_path=yaml_path, table_name=table_name, schema_name=STAGING_SCHEMA),
+        sql=render_ddl(
+            column_mapping_yaml_path=yaml_path, table_name=table_name, schema_name=STAGING_SCHEMA
+        ),
     )
 
     load_to_staging = ExtractToStagingOperator(

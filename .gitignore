@@ -38,3 +38,6 @@ terraform.tfplan.*
 
 # OS
 .DS_Store
+
+#Configs
+*indexes.yaml
