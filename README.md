@@ -131,3 +131,15 @@ This ensures compatibility with Astro while maintaining fast installs during loc
 
 ## Windows Users: WSL2 Requirement
 If you are using Windows, you should use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/) (Windows Subsystem for Linux) for development. Airflow does not run natively on Windows, so WSL2 is required to run Airflow and execute tests reliably.
+
+
+## Disclaimer
+
+The MIT License applies only to the code in this repository.
+Any third-party data accessed or processed by this code is subject to its own copyright and licensing terms.
+Users are responsible for ensuring compliance with those terms.
+
+This project does not provide or distribute any third-party content.
+The code is intended for personal, non-commercial use only.
+Users are solely responsible for ensuring their use of any third-party data complies with all applicable copyright and licensing terms.
+The project author is not liable for any misuse of any third-party content.

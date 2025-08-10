@@ -4,6 +4,7 @@
 
 resource "minio_s3_bucket" "data_source_buckets" {
   for_each = toset([
+    "indexes-ishares-holdings-data",
     "stocks-yahoo-finance-data"
   ])
 

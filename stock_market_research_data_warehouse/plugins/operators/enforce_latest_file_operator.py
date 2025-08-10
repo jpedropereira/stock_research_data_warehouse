@@ -34,7 +34,7 @@ class EnforceLatestFileOperator(BaseOperator):
     def __init__(
         self,
         deduplication_columns: list[str],
-        postgres_conn_id,
+        postgres_conn_id: str,
         schema_name: str,
         table_name: str,
         timestamp_in_file_name: bool = True,
@@ -68,7 +68,9 @@ class EnforceLatestFileOperator(BaseOperator):
                 f"using the columns: {deduplication_condition}"
             )
 
-        exists_condition = "\nAND ".join([f"t1.{col} = t2.{col}" for col in self.deduplication_columns])
+        exists_condition = "\nAND ".join(
+            [f"t1.{col} = t2.{col}" for col in self.deduplication_columns]
+        )
 
         view_sql = f"""
         CREATE OR REPLACE VIEW {self.schema_name}.v_{self.table_name}_latest_files AS

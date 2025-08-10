@@ -1,0 +1,19 @@
+# Data source: BlackRock iShares
+# Holdings data is owned by BlackRock and subject to their copyright notice.
+# See their notice inside the holdings .csv files available at each of their ETFs page
+# The data can be used solely for your personal, non-commercial use. You cannot distribute it.
+# To import data into the warehouse, you must create a stock_market_research_data_warehouse/include/stocks/indexes.yaml file.
+# Find the indexes that you would like like to do your research about and add the configs as per the following example.
+# Make sure you always respect BlackRock's copyright notice.
+
+ISHARES:
+  INDEX_KEY1:
+    description: "Write a description for the index you are doing your research about"
+    ishares_etf_name: "Name of the iShares index 1"
+    ishares_etf_ticker: "TICKER_SYMBOL_FOR_THE_ETF1"
+    ishares_etf_url: "URL_FOR_THE_ISHARES_ETF_NAME1
+  INDEX_KEY2:
+    description: "Write a description for the index you are doing your research about"
+    ishares_etf_name: "Name of the iShares index 2"
+    ishares_etf_ticker: "TICKER_SYMBOL_FOR_THE_ETF2"
+    ishares_etf_url: "URL_FOR_THE_ISHARES_ETF_NAME2
