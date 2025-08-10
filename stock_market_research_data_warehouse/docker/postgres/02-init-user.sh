@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+CREATE DATABASE db_sr_dev;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_dev <<-EOSQL
+CREATE SCHEMA IF NOT EXISTS staging;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+CREATE DATABASE db_sr_prd;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_prd <<-EOSQL
+CREATE SCHEMA IF NOT EXISTS staging;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+CREATE USER ${AIRFLOW_DB_USER} WITH PASSWORD '${AIRFLOW_DB_PASSWORD}';
+GRANT CONNECT ON DATABASE db_sr_dev TO ${AIRFLOW_DB_USER};
+GRANT CONNECT ON DATABASE db_sr_prd TO ${AIRFLOW_DB_USER};
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_dev <<-EOSQL
+GRANT USAGE, CREATE ON SCHEMA staging TO ${AIRFLOW_DB_USER};
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname db_sr_prd <<-EOSQL
+GRANT USAGE, CREATE ON SCHEMA staging TO ${AIRFLOW_DB_USER};
+EOSQL

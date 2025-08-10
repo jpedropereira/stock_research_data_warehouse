@@ -4,6 +4,6 @@
 minio_server        = "localhost:9000"
 minio_root_user     = # Should match your .env.local MINIO_ROOT_USER
 minio_root_password = # Should match your .env.local MINIO_ROOT_PASSWORD
-minio_ssl          = false
-environment        = "dev"
-project_name       = "stock-research-dw"
+minio_ssl           = false
+environment         = "dev"
+project_name        = "smr-dw"

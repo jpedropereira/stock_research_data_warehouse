@@ -6,8 +6,13 @@ readme = "README.md"
 requires-python = "~=3.12.0"
 dependencies = [
     "apache-airflow[celery,postgres,amazon]==3.0.3",
+    "apache-airflow-providers-common-sql==1.27.4",
+    "pandas==2.3.1",
     "psycopg2-binary==2.9.10",
+    "pyarrow==21.0.0",
+    "python-dotenv",
     "requests==2.32.4",
+    "yfinance>=0.2.65,<0.3.0",
 ]
 
 [dependency-groups]
@@ -18,7 +23,6 @@ dev = [
     "ipython",
     "pre-commit",
     "pycln",
-    "python-dotenv",
     "pytest",
     "reorder-python-imports",
 ]
@@ -27,18 +31,27 @@ dev = [
 package = true
 
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta:__legacy__"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = []
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = [
+    "tests*",
+    "data*",
+    "terraform*",
+    "docs*",
+    "scripts*",
+    ".venv*",
+    "env*",
+    "__pycache__*"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-env_files = ["tests/.env.test"]
 log_cli = "True"
 log_cli_level = "INFO"
 

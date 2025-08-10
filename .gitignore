@@ -1,0 +1,40 @@
+# Git
+.git
+
+# Environment files
+.env
+.env.local
+
+# Data directories (databases, object storage, etc.)
+data/
+
+# Python
+__pycache__/
+.venv
+*.egg-info/
+.python-version
+requirements.txt
+.idea
+*.pytest_cache
+
+# Airflow
+airflow_settings.yaml
+airflow-webserver.pid
+webserver_config.py
+airflow.cfg
+airflow.db
+
+# Astronomer
+astro
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+terraform.tfplan.*
+
+# OS
+.DS_Store

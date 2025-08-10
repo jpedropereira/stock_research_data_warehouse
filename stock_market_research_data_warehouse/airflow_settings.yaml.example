@@ -4,7 +4,7 @@ airflow:
       conn_type: postgres
       host: datawarehouse-db
       port: 5432
-      schema: warehouse
+      schema: DB_SR_DEV #needs to be according to the environment
       login: <username>
       password: <password>
 
