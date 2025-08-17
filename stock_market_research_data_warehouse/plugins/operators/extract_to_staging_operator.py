@@ -1,3 +1,4 @@
+import datetime
 import os
 from contextlib import contextmanager
 from io import StringIO
@@ -137,10 +138,18 @@ class ExtractToStagingOperator(BaseOperator):
 
         data.columns = [col.lower() for col in data.columns]
 
+        # Add file_name column
         data[self.file_name_column.lower()] = self.object_key
-
         column_mapping[self.file_name_column.lower()] = {
             "csv_col": self.file_name_column.lower(),
+            "df_dtype": "str",
+        }
+
+        # Add load_timestamp column (UTC now)
+        load_timestamp_col = "load_timestamp"
+        data[load_timestamp_col] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        column_mapping[load_timestamp_col] = {
+            "csv_col": load_timestamp_col,
             "df_dtype": "str",
         }
 
@@ -158,12 +167,26 @@ class ExtractToStagingOperator(BaseOperator):
 
         self.log.info(f"Final columns for database: {data.columns.tolist()}")
 
+        # Drop rows where ticker is null, empty, or whitespace
+        if "ticker" in data.columns:
+            before = len(data)
+            data = data[~data["ticker"].isnull() & (data["ticker"].astype(str).str.strip() != "")]
+            after = len(data)
+            dropped = before - after
+            if dropped > 0:
+                self.log.warning(
+                    f"Dropped {dropped} rows with null/empty/whitespace ticker before loading."
+                )
+
         # Cast columns to specified dtypes
         for col, val in column_mapping.items():
             dtype = val["df_dtype"]
             if dtype == "int":
                 data[col] = data[col].fillna(0).astype(int)
             elif dtype == "float":
+                # Remove thousands separators (commas) before casting to float
+                data[col] = data[col].astype(str).str.replace(",", "", regex=False)
+                data[col] = data[col].replace("", None)
                 data[col] = data[col].astype(float)
             elif dtype == "str":
                 data[col] = data[col].astype(str)
@@ -202,14 +225,20 @@ class ExtractToStagingOperator(BaseOperator):
 
             except psycopg2.DatabaseError as e:
                 self.log.error(
-                    f"Database error during COPY: {e} | Table: {full_table_name} | " f"File: {self.object_key}"
+                    f"Database error during COPY: {e} | Table: {full_table_name} | "
+                    f"File: {self.object_key}"
                 )
-                raise AirflowException(f"Failed to load {self.object_key} into {full_table_name}: {e}")
+                raise AirflowException(
+                    f"Failed to load {self.object_key} into {full_table_name}: {e}"
+                )
             except Exception as e:
                 self.log.error(
-                    f"Unexpected error during COPY: {e} | Table: {full_table_name} | " f"File: {self.object_key}"
+                    f"Unexpected error during COPY: {e} | Table: {full_table_name} | "
+                    f"File: {self.object_key}"
                 )
-                raise AirflowException(f"Failed to load {self.object_key} into {full_table_name}: {e}")
+                raise AirflowException(
+                    f"Failed to load {self.object_key} into {full_table_name}: {e}"
+                )
 
             self.log.info(f"Successfully loaded {len(data)} records using COPY")
             return len(data)
