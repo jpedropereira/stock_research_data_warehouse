@@ -16,13 +16,16 @@ load_dotenv()
 ENV = os.getenv("ENV")
 if ENV is None:
     raise ValueError(
-        "ENV environment variable is required but not set. " "Please set ENV=DEV or ENV=PRD in your .env file."
+        "ENV environment variable is required but not set. "
+        "Please set ENV=DEV or ENV=PRD in your .env file."
     )
 
 if ENV not in ["DEV", "PRD"]:
     raise ValueError(f"ENV must be either 'DEV' or 'PRD', got '{ENV}'")
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+OWNER = os.getenv("ENV", "Unknown")
 
 # Database Configuration
 DATABASE_NAME = f"db_sr_{ENV}"
@@ -40,6 +43,7 @@ def now_tz():
 
 __all__ = [
     "ENV",
+    "OWNER",
     "PROJECT_ROOT",
     "DATABASE_NAME",
     "STAGING_SCHEMA",
