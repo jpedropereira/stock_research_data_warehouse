@@ -12,7 +12,7 @@ tables:
           low_price DECIMAL(12,4),
           close_price DECIMAL(12,4),
           volume BIGINT,
-          extraction_datetime TIMESTAMP NOT NULL,
+          load_timestamp TIMESTAMP WITH TIME ZONE,
           file_name VARCHAR(255)
       );
     columns:
@@ -37,6 +37,72 @@ tables:
       volume:
         csv_col: volume
         df_dtype: int
-      extraction_datetime:
-        csv_col: extraction_datetime
+  index_holdings:
+    ddl: |
+      CREATE TABLE IF NOT EXISTS {{schema}}.index_holdings (
+      index VARCHAR(20) NOT NULL,
+      ticker VARCHAR(20) NOT NULL,
+      name VARCHAR(100),
+      sector VARCHAR(100),
+      asset_class VARCHAR(100),
+      market_value DECIMAL(20,2),
+      weight_percent DECIMAL(6,2),
+      notional_value DECIMAL(20,2),
+      quantity DECIMAL(20,2),
+      price DECIMAL(20,4),
+      location VARCHAR(50),
+      exchange VARCHAR(100),
+      currency VARCHAR(10),
+      fx_rate DECIMAL(12,4),
+      market_currency VARCHAR(10),
+      accrual_date VARCHAR(20),
+      file_name VARCHAR(200),
+      load_timestamp TIMESTAMP WITH TIME ZONE
+      );
+    columns:
+      ticker:
+        csv_col: ticker
+        df_dtype: str
+              ticker
+      name:
+        csv_col: name
+        df_dtype: str
+      sector:
+        csv_col: sector
+        df_dtype: str
+      asset_class:
+        csv_col: asset class
+        df_dtype: str
+      market_value:
+        csv_col: market value
+        df_dtype: float
+      weight_percent:
+        csv_col: weight (%)
+        df_dtype: float
+      notional_value:
+        csv_col: notional value
+        df_dtype: float
+      quantity:
+        csv_col: quantity
+        df_dtype: float
+      price:
+        csv_col: price
+        df_dtype: float
+      location:
+        csv_col: location
+        df_dtype: str
+      exchange:
+        csv_col: exchange
+        df_dtype: str
+      currency:
+        csv_col: currency
+        df_dtype: str
+      fx_rate:
+        csv_col: fx rate
+        df_dtype: float
+      market_currency:
+        csv_col: market currency
+        df_dtype: str
+      accrual_date:
+        csv_col: accrual date
         df_dtype: str

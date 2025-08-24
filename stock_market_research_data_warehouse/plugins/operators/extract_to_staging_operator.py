@@ -1,3 +1,4 @@
+import datetime
 import os
 from contextlib import contextmanager
 from io import StringIO
@@ -33,13 +34,16 @@ class ExtractToStagingOperator(BaseOperator):
     :param date_column: Column name used for date range filtering (default: 'date')
     :param file_name_column: Column name used for file-based duplicate prevention (default: 'file_name')
     :param csv_delimiter: CSV delimiter character (default: ',')
+    :param add_label_columns: (Optional) Dictionary of {column_name: value} to add constant label
+        columns to the ingested data. Pass this if you want to add one or more columns
+        with a certain label and value to all rows.
 
     Note:
-        - All column mappings and data types must be defined in the YAML file under the 'tables' key.
-        - Use table_name as the subkey for each table's config.
-        - The loaded mapping is logged for traceability.
-        - No direct column_mapping argument is supported; all mappings are managed centrally in YAML for
-          consistency and maintainability.
+            - All column mappings and data types must be defined in the YAML file under the 'tables' key.
+            - Use table_name as the subkey for each table's config.
+            - The loaded mapping is logged for traceability.
+            - No direct column_mapping argument is supported; all mappings are managed centrally in YAML for
+                consistency and maintainability.
     """
 
     template_fields = ("object_key",)
@@ -56,6 +60,7 @@ class ExtractToStagingOperator(BaseOperator):
         date_column: str = "date",
         file_name_column: str = "file_name",
         csv_delimiter: str = ",",
+        add_label_columns: dict[str, str] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -69,6 +74,7 @@ class ExtractToStagingOperator(BaseOperator):
         self.file_name_column = file_name_column
         self.column_mapping_yaml_path = column_mapping_yaml_path
         self.csv_delimiter = csv_delimiter
+        self.add_label_columns = add_label_columns
 
     def _normalize_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -137,10 +143,18 @@ class ExtractToStagingOperator(BaseOperator):
 
         data.columns = [col.lower() for col in data.columns]
 
+        # Add file_name column
         data[self.file_name_column.lower()] = self.object_key
-
         column_mapping[self.file_name_column.lower()] = {
             "csv_col": self.file_name_column.lower(),
+            "df_dtype": "str",
+        }
+
+        # Add load_timestamp column (UTC now)
+        load_timestamp_col = "load_timestamp"
+        data[load_timestamp_col] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        column_mapping[load_timestamp_col] = {
+            "csv_col": load_timestamp_col,
             "df_dtype": "str",
         }
 
@@ -158,15 +172,35 @@ class ExtractToStagingOperator(BaseOperator):
 
         self.log.info(f"Final columns for database: {data.columns.tolist()}")
 
+        # Drop rows where ticker is null, empty, or whitespace
+        if "ticker" in data.columns:
+            before = len(data)
+            data = data[~data["ticker"].isnull() & (data["ticker"].astype(str).str.strip() != "")]
+            after = len(data)
+            dropped = before - after
+            if dropped > 0:
+                self.log.warning(
+                    f"Dropped {dropped} rows with null/empty/whitespace ticker before loading."
+                )
+
         # Cast columns to specified dtypes
         for col, val in column_mapping.items():
             dtype = val["df_dtype"]
             if dtype == "int":
                 data[col] = data[col].fillna(0).astype(int)
             elif dtype == "float":
+                # Remove thousands separators (commas) before casting to float
+                data[col] = data[col].astype(str).str.replace(",", "", regex=False)
+                data[col] = data[col].replace("", None)
                 data[col] = data[col].astype(float)
             elif dtype == "str":
                 data[col] = data[col].astype(str)
+
+        # Add label columns if add_label_columns is defined
+        if self.add_label_columns:
+            for key, value in self.add_label_columns.items():
+                self.log.info(f"Adding label column {key} with value {value}")
+                data[key] = value
 
         # Delete existing records with the same file_name to avoid duplicates
         file_name = data[self.file_name_column].iloc[0]
@@ -202,14 +236,20 @@ class ExtractToStagingOperator(BaseOperator):
 
             except psycopg2.DatabaseError as e:
                 self.log.error(
-                    f"Database error during COPY: {e} | Table: {full_table_name} | " f"File: {self.object_key}"
+                    f"Database error during COPY: {e} | Table: {full_table_name} | "
+                    f"File: {self.object_key}"
                 )
-                raise AirflowException(f"Failed to load {self.object_key} into {full_table_name}: {e}")
+                raise AirflowException(
+                    f"Failed to load {self.object_key} into {full_table_name}: {e}"
+                )
             except Exception as e:
                 self.log.error(
-                    f"Unexpected error during COPY: {e} | Table: {full_table_name} | " f"File: {self.object_key}"
+                    f"Unexpected error during COPY: {e} | Table: {full_table_name} | "
+                    f"File: {self.object_key}"
                 )
-                raise AirflowException(f"Failed to load {self.object_key} into {full_table_name}: {e}")
+                raise AirflowException(
+                    f"Failed to load {self.object_key} into {full_table_name}: {e}"
+                )
 
             self.log.info(f"Successfully loaded {len(data)} records using COPY")
             return len(data)
