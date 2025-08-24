@@ -18,7 +18,7 @@ class EnforceLatestFileOperator(BaseOperator):
     :param table_name: Target table name
     :param timestamp_in_file_name:
         If True, prioritizes file_name as the primary ordering for recency;
-        otherwise, uses extraction_datetime (default: True)
+        otherwise, uses load_timestamp (default: True)
     :param kwargs: Additional keyword arguments passed to BaseOperator
 
     Example:
@@ -56,13 +56,13 @@ class EnforceLatestFileOperator(BaseOperator):
         deduplication_condition = ", ".join(self.deduplication_columns)
 
         if self.timestamp_in_file_name:
-            order_condition = "file_name DESC, extraction_datetime DESC"
+            order_condition = "file_name DESC, load_timestamp DESC"
             self.log.info(
                 "Removing records from older files based on timestamp in file name "
                 f"using the columns: {deduplication_condition}"
             )
         else:
-            order_condition = "extraction_datetime DESC, file_name DESC"
+            order_condition = "load_timestamp DESC, file_name DESC"
             self.log.info(
                 "Removing records from older files based on extraction timestamp "
                 f"using the columns: {deduplication_condition}"

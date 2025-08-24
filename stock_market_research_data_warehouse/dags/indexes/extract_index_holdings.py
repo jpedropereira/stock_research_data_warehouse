@@ -70,7 +70,7 @@ def create_extract_index_holdings_dag(index, dag_id, default_args, schedule):
         get_ishares_indexes_task = get_ishares_indexes_task()
 
         @task()
-        def get_ishares_holdings_csv_url(etf_url: str) -> dict:
+        def get_ishares_holdings_csv_url(etf_url: str) -> str:
             logging.info(f"Finding holdings csv url for {index} index.")
             url = get_ishares_etf_holdings_csv_url(etf_url)
             logging.info(f"Holdings csv url for {index} index is {url}")
@@ -79,7 +79,7 @@ def create_extract_index_holdings_dag(index, dag_id, default_args, schedule):
         get_ishares_holdings_csv_urls = get_ishares_holdings_csv_url(get_ishares_indexes_task)
 
         @task()
-        def get_ishares_holdings_data(csv_url: str):
+        def get_ishares_holdings_data(csv_url: str) -> str:
             logging.info(f"Reading holdings url for {index} index from {csv_url}")
 
             s3_hook = S3Hook(aws_conn_id="minio_conn")

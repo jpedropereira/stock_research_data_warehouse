@@ -40,6 +40,7 @@ tables:
   index_holdings:
     ddl: |
       CREATE TABLE IF NOT EXISTS {{schema}}.index_holdings (
+      index VARCHAR(20) NOT NULL,
       ticker VARCHAR(20) NOT NULL,
       name VARCHAR(100),
       sector VARCHAR(100),
