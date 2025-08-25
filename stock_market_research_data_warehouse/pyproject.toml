@@ -25,6 +25,7 @@ dev = [
     "pre-commit",
     "pycln",
     "pytest",
+    "pytest-testmon",
     "reorder-python-imports",
 ]
 

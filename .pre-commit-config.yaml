@@ -43,13 +43,13 @@ repos:
     hooks:
       - id: pytest-fast
         name: Run tests for changed files
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/stock_market_research_data_warehouse" && pytest tests/ --testmon --tb=short -x'
+        entry: bash -c 'cd stock_market_research_data_warehouse && pytest tests/ --testmon --tb=short'
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
       - id: pytest-all
         name: Run all tests on push
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/stock_market_research_data_warehouse" && pytest tests/'
+        entry: bash -c 'cd stock_market_research_data_warehouse && pytest tests/'
         language: system
         pass_filenames: false
-        stages: [push]
+        stages: [pre-push]
