@@ -110,7 +110,7 @@ This project uses [pre-commit](https://pre-commit.com/) to automate code quality
 ### Installation
 ```bash
 # Install the git hooks defined in .pre-commit-config.yaml
-pre-commit install
+pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
 
 After installation, pre-commit will automatically run checks on staged files before each commit.

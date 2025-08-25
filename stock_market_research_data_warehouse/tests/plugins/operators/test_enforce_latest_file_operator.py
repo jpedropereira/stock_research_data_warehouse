@@ -26,7 +26,7 @@ class TestEnforceLatestFileOperator:
         deletion_sql = mock_postgres.run.call_args_list[1][0][0]
         assert "CREATE OR REPLACE VIEW staging.v_test_table_name_latest_files" in view_sql
         assert "DELETE FROM staging.test_table_name" in deletion_sql
-        assert "ORDER BY file_name DESC, extraction_datetime DESC" in view_sql
+        assert "ORDER BY file_name DESC, load_timestamp DESC" in view_sql
         assert "PARTITION BY symbol, date" in view_sql
 
     @patch("plugins.operators.enforce_latest_file_operator.PostgresHook")
@@ -48,7 +48,7 @@ class TestEnforceLatestFileOperator:
         assert mock_postgres.run.call_count == 2
         view_sql = mock_postgres.run.call_args_list[0][0][0]
         assert "CREATE OR REPLACE VIEW staging.v_test_table_name_latest_files" in view_sql
-        assert "ORDER BY extraction_datetime DESC, file_name DESC" in view_sql
+        assert "ORDER BY load_timestamp DESC, file_name DESC" in view_sql
         assert "PARTITION BY symbol, date" in view_sql
 
     @patch("plugins.operators.enforce_latest_file_operator.PostgresHook")
