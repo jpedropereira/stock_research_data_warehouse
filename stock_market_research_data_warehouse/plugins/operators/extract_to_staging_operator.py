@@ -158,6 +158,12 @@ class ExtractToStagingOperator(BaseOperator):
             "df_dtype": "str",
         }
 
+        # Add label columns if add_label_columns is defined
+        if self.add_label_columns:
+            for key, value in self.add_label_columns.items():
+                self.log.info(f"Adding label column {key} with value {value}")
+                data[key] = value
+
         self.log.info(f"Applying column mapping: {column_mapping}")
 
         rename_map = {v["csv_col"]: k for k, v in column_mapping.items()}
@@ -195,12 +201,6 @@ class ExtractToStagingOperator(BaseOperator):
                 data[col] = data[col].astype(float)
             elif dtype == "str":
                 data[col] = data[col].astype(str)
-
-        # Add label columns if add_label_columns is defined
-        if self.add_label_columns:
-            for key, value in self.add_label_columns.items():
-                self.log.info(f"Adding label column {key} with value {value}")
-                data[key] = value
 
         # Delete existing records with the same file_name to avoid duplicates
         file_name = data[self.file_name_column].iloc[0]

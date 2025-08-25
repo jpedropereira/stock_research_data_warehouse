@@ -27,6 +27,3 @@ class TestGetIsharesEtfHoldingsCsvUrl:
         mock_get.return_value = mock_response
         with pytest.raises(ValueError, match="URL for holdings csv was not found"):
             get_ishares_etf_holdings_csv_url(self.etf_url)
-
-
-# TODO: Add test for adding index column.
