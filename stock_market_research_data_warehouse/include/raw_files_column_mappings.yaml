@@ -60,10 +60,12 @@ tables:
       load_timestamp TIMESTAMP WITH TIME ZONE
       );
     columns:
+      index:
+        csv_col: index
+        df_dtype: str
       ticker:
         csv_col: ticker
         df_dtype: str
-              ticker
       name:
         csv_col: name
         df_dtype: str
