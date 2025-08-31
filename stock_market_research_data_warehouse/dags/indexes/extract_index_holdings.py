@@ -29,7 +29,7 @@ with open(indexes_yaml_path) as f:
 dag_args = {
     "start_date": datetime(2025, 8, 18, 1),
     "catchup": False,
-    "retries": 5,
+    "retries": 2,
     "retry_delay": timedelta(minutes=2),
 }
 
@@ -72,7 +72,9 @@ def create_extract_index_holdings_dag(index, dag_id, default_args, schedule):
         @task()
         def get_ishares_holdings_csv_url(etf_url: str) -> str:
             logging.info(f"Finding holdings csv url for {index} index.")
-            url = get_ishares_etf_holdings_csv_url(etf_url)
+            # Get the ticker from the index configuration for better accuracy
+            ticker = index_configs.get("ishares_etf_ticker")
+            url = get_ishares_etf_holdings_csv_url(etf_url, ticker)
             logging.info(f"Holdings csv url for {index} index is {url}")
             return url
 
