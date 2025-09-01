@@ -84,5 +84,8 @@ class TestWebScrapingService:
     @patch("include.web_scrapping.base_service.sync_playwright")
     def test_get_page_raises_if_not_initialized(self, mock_sync_pl):
         svc = WebScrapingService("ws://x")
-        with pytest.raises(RuntimeError):
+        with pytest.raises(
+            RuntimeError,
+            match=r"WebScrapingService not properly initialized\. Use as context manager\.",
+        ):
             svc.get_page()
