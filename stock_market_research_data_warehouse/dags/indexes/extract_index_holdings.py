@@ -77,8 +77,7 @@ def create_extract_index_holdings_dag(index, dag_id, default_args, schedule):
         def get_ishares_holdings_csv_url(etf_url: str) -> str:
             logging.info(f"Finding holdings csv url for {index} index.")
             # Get the ticker from the index configuration for better accuracy
-            ticker = index_configs.get("ishares_etf_ticker")
-            url = get_ishares_etf_holdings_csv_url(etf_url, ticker)
+            url = get_ishares_etf_holdings_csv_url(etf_url)
             logging.info(f"Holdings csv url for {index} index is {url}")
             return url
 

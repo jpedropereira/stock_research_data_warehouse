@@ -7,7 +7,7 @@ from include.web_scrapping import get_ishares_csv_download_link
 BASE_ISHARES_URL = "https://www.ishares.com"
 
 
-def get_ishares_etf_holdings_csv_url(etf_url: str, ticker: str = None) -> str:
+def get_ishares_etf_holdings_csv_url(etf_url: str) -> str:
     """
     Finds and returns the CSV holdings URL for a given iShares ETF page.
 
@@ -16,8 +16,6 @@ def get_ishares_etf_holdings_csv_url(etf_url: str, ticker: str = None) -> str:
 
     Args:
         etf_url: The URL of the iShares ETF page
-        ticker: Optional ticker symbol (not used in this implementation,
-                kept for backward compatibility)
 
     Disclaimer:
     The holdings data is owned by BlackRock and/or its third-party information providers.
