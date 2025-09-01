@@ -197,3 +197,54 @@ class TestExtractToStagingOperator:
         written_df = pd.read_csv(args[1], header=None)
         # The label column should be present and have the correct value in all rows (robust to column order)
         assert any((written_df == "label_value").all())
+
+    @patch("plugins.operators.extract_to_staging_operator.S3Hook")
+    @patch("plugins.operators.extract_to_staging_operator.PostgresHook")
+    @patch("plugins.operators.extract_to_staging_operator.load_table_config")
+    @patch("pandas.read_csv")
+    def test_execute_with_col_mappings(
+        self,
+        mock_read_csv,
+        mock_load_table_config,
+        mock_postgres_hook,
+        mock_s3_hook,
+    ):
+        # Setup mocks
+        mock_s3 = MagicMock()
+        mock_s3.get_key.return_value.get.return_value = {
+            "Body": MagicMock(read=lambda: b"shares,col2\n10,2\n20,4")
+        }
+        mock_s3_hook.return_value = mock_s3
+
+        mock_postgres = MagicMock()
+        mock_postgres_hook.return_value = mock_postgres
+
+        mock_load_table_config.return_value = {
+            "quantity": {"csv_col": "quantity", "df_dtype": "int"},
+            "col2": {"csv_col": "col2", "df_dtype": "int"},
+            "file_name": {"csv_col": "file_name", "df_dtype": "str"},
+        }
+
+        # DataFrame with original column 'shares' to be renamed to 'quantity'
+        df = pd.DataFrame({"shares": [10, 20], "col2": [2, 4]})
+        mock_read_csv.return_value = df
+
+        op = ExtractToStagingOperator(
+            task_id="test_task",
+            s3_conn_id="test_s3",
+            bucket_name="test_bucket",
+            object_key="test.csv",
+            postgres_conn_id="test_postgres",
+            schema_name="public",
+            table_name="test_table",
+            column_mapping_yaml_path="dummy.yaml",
+            col_mappings={"shares": "quantity"},
+        )
+
+        result = op.execute(context={})
+        assert result == 2
+        # Check that the column was renamed
+        args, _ = mock_postgres.copy_expert.call_args
+        written_df = pd.read_csv(args[1], header=None)
+        # The first column should be the renamed 'quantity'
+        assert (written_df.iloc[:, 0] == [10, 20]).all()
