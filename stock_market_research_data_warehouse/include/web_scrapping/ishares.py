@@ -305,8 +305,10 @@ def get_ishares_csv_download_link(etf_url: str) -> str:
             return get_ishares_download_link(etf_url, file_type=None)
         except Exception as e2:
             logger.error(f"Fallback also failed: {e2}")
-            error_msg = f"Could not extract CSV download link from {etf_url}. "
-            error_msg += "This may be due to: 1) Page loading timeout, 2) Changed page structure, "
-            error_msg += "3) Network connectivity issues, or 4) Rate limiting. "
-            error_msg += f"Original error: {e}, Fallback error: {e2}"
+            error_msg = (
+                f"Could not extract CSV download link from {etf_url}.\n"
+                "This may be due to: 1) Page loading timeout, 2) Changed page structure, "
+                "3) Network connectivity issues, or 4) Rate limiting.\n"
+                f"Original error: {e}, Fallback error: {e2}"
+            )
             raise ValueError(error_msg)
