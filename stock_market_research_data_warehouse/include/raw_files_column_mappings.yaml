@@ -52,7 +52,6 @@ tables:
       price DECIMAL(20,4),
       location VARCHAR(50),
       exchange VARCHAR(100),
-      fx_rate DECIMAL(12,4),
       market_currency VARCHAR(10),
       file_name VARCHAR(200),
       load_timestamp TIMESTAMP WITH TIME ZONE
@@ -94,15 +93,6 @@ tables:
       exchange:
         csv_col: exchange
         df_dtype: str
-      currency:
-        csv_col: currency
-        df_dtype: str
-      fx_rate:
-        csv_col: fx rate
-        df_dtype: float
       market_currency:
         csv_col: market currency
-        df_dtype: str
-      accrual_date:
-        csv_col: accrual date
         df_dtype: str
