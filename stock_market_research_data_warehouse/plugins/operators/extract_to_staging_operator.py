@@ -148,6 +148,7 @@ class ExtractToStagingOperator(BaseOperator):
         data.columns = [col.lower() for col in data.columns]
 
         if self.col_mappings:
+            self.log.info(f"Applying column renaming with col_mappings: {self.col_mappings}")
             data.rename(columns=self.col_mappings, inplace=True)
 
         # Add file_name column
