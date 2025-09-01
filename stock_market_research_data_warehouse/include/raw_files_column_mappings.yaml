@@ -52,10 +52,8 @@ tables:
       price DECIMAL(20,4),
       location VARCHAR(50),
       exchange VARCHAR(100),
-      currency VARCHAR(10),
       fx_rate DECIMAL(12,4),
       market_currency VARCHAR(10),
-      accrual_date VARCHAR(20),
       file_name VARCHAR(200),
       load_timestamp TIMESTAMP WITH TIME ZONE
       );

@@ -11,3 +11,8 @@ COMMON_ARGS = {
     "depends_on_past": False,
     "schedule": None,
 }
+
+
+COL_MAPPINGS = {
+    "shares": "quantity",
+}

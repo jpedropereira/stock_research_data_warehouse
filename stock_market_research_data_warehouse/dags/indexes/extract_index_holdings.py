@@ -9,7 +9,11 @@ from airflow.decorators import task
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from include.config import PROJECT_ROOT, STAGING_SCHEMA, now_tz
-from include.indexes.constants import BUCKET_INDEXES_ISHARES_HOLDINGS, COMMON_ARGS
+from include.indexes.constants import (
+    BUCKET_INDEXES_ISHARES_HOLDINGS,
+    COL_MAPPINGS,
+    COMMON_ARGS,
+)
 from include.indexes.index_holdings import (
     get_ishares_etf_holdings,
     get_ishares_etf_holdings_csv_url,
@@ -129,6 +133,7 @@ def create_extract_index_holdings_dag(index, dag_id, default_args, schedule):
             column_mapping_yaml_path=tables_yaml_path,
             object_key="{{ ti.xcom_pull(task_ids='get_ishares_holdings_data') }}",
             add_label_columns={"index": index},
+            col_mappings=COL_MAPPINGS,
         )
 
         enforce_lates_file = EnforceLatestFileOperator(

@@ -37,6 +37,8 @@ class ExtractToStagingOperator(BaseOperator):
     :param add_label_columns: (Optional) Dictionary of {column_name: value} to add constant label
         columns to the ingested data. Pass this if you want to add one or more columns
         with a certain label and value to all rows.
+    :param col_mappings: (Optional) Dictionary mapping original column names to new names.
+                        Used to rename columns in the DataFrame before further processing. Example: {"shares": "quantity"}
 
     Note:
             - All column mappings and data types must be defined in the YAML file under the 'tables' key.
@@ -61,6 +63,7 @@ class ExtractToStagingOperator(BaseOperator):
         file_name_column: str = "file_name",
         csv_delimiter: str = ",",
         add_label_columns: dict[str, str] = None,
+        col_mappings: dict[str, str] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -75,6 +78,7 @@ class ExtractToStagingOperator(BaseOperator):
         self.column_mapping_yaml_path = column_mapping_yaml_path
         self.csv_delimiter = csv_delimiter
         self.add_label_columns = add_label_columns
+        self.col_mappings = col_mappings
 
     def _normalize_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -142,6 +146,9 @@ class ExtractToStagingOperator(BaseOperator):
         self.log.info(f"Loaded {len(data)} records from CSV")
 
         data.columns = [col.lower() for col in data.columns]
+
+        if self.col_mappings:
+            data.rename(columns=self.col_mappings, inplace=True)
 
         # Add file_name column
         data[self.file_name_column.lower()] = self.object_key
