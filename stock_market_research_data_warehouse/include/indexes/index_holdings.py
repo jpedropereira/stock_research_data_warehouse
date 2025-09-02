@@ -2,7 +2,7 @@ from io import StringIO
 
 import pandas as pd
 import requests
-from include.web_scrapping import get_ishares_csv_download_link
+from include.web_scraping import get_ishares_csv_download_link
 
 BASE_ISHARES_URL = "https://www.ishares.com"
 

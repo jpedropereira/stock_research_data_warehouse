@@ -1,4 +1,4 @@
-from include.web_scrapping.helpers import get_context_overrides_for_url
+from include.web_scraping.helpers import get_context_overrides_for_url
 
 
 class TestGetContextOverridesForUrl:

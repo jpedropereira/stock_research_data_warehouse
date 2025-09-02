@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from include.web_scrapping.ishares import (
+from include.web_scraping.ishares import (
     get_ishares_csv_download_link,
     get_ishares_download_link,
 )
@@ -20,7 +20,7 @@ class TestIsharesDownloadLink:
         with pytest.raises(ValueError):
             get_ishares_download_link("https://example.com/not-ishares")
 
-    @patch("include.web_scrapping.ishares.WebScrapingService")
+    @patch("include.web_scraping.ishares.WebScrapingService")
     def test_finds_csv_link_via_selector(self, mock_service):
         # Arrange page
         page = _make_mock_page()
@@ -49,7 +49,7 @@ class TestIsharesDownloadLink:
         page.close.assert_called_once()
         page.context.close.assert_called_once()
 
-    @patch("include.web_scrapping.ishares.WebScrapingService")
+    @patch("include.web_scraping.ishares.WebScrapingService")
     def test_relative_href_is_made_absolute(self, mock_service):
         page = _make_mock_page()
         link_el = MagicMock()
@@ -67,7 +67,7 @@ class TestIsharesDownloadLink:
         )
         assert href.startswith("https://www.ishares.com/")
 
-    @patch("include.web_scrapping.ishares.WebScrapingService")
+    @patch("include.web_scraping.ishares.WebScrapingService")
     def test_no_selector_tries_ajax_then_raises(self, mock_service):
         # Arrange a page without matching selectors and with failing ajax check
         page = _make_mock_page()
@@ -95,7 +95,7 @@ class TestIsharesDownloadLink:
         # Ensure cleanup called
         page.close.assert_called_once()
 
-    @patch("include.web_scrapping.ishares.WebScrapingService")
+    @patch("include.web_scraping.ishares.WebScrapingService")
     def test_get_ishares_csv_download_link_fallback(self, mock_service):
         # First attempt raises, fallback returns value
         page1 = _make_mock_page()
