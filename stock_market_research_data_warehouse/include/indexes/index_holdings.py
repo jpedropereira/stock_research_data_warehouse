@@ -2,7 +2,7 @@ from io import StringIO
 
 import pandas as pd
 import requests
-from bs4 import BeautifulSoup
+from include.web_scraping import get_ishares_csv_download_link
 
 BASE_ISHARES_URL = "https://www.ishares.com"
 
@@ -11,23 +11,19 @@ def get_ishares_etf_holdings_csv_url(etf_url: str) -> str:
     """
     Finds and returns the CSV holdings URL for a given iShares ETF page.
 
+    Uses the shared web scraping service to handle both US and UK iShares pages
+    reliably, including pages that load download links via JavaScript.
+
+    Args:
+        etf_url: The URL of the iShares ETF page
+
     Disclaimer:
     The holdings data is owned by BlackRock and/or its third-party information providers.
     Use of this data is subject to BlackRock's copyright and licensing terms.
     This function is intended for personal, non-commercial use only.
     Do not redistribute or use the data for commercial purposes.
     """
-    response = requests.get(etf_url)
-    soup = BeautifulSoup(response.text, "html.parser")
-    # Find the <a> tag with the correct class
-    link = soup.find("a", class_="icon-xls-export")
-    if link and link.get("href"):
-        href = link["href"]
-        # Prepend base URL if needed
-        if href.startswith("/"):
-            href = BASE_ISHARES_URL + href
-        return href
-    raise ValueError("URL for holdings csv was not found. Please review logic.")
+    return get_ishares_csv_download_link(etf_url)
 
 
 def get_ishares_etf_holdings(csv_url: str) -> pd.DataFrame:

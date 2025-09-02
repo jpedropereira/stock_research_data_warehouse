@@ -13,9 +13,15 @@ ISHARES:
     ishares_etf_ticker: "TICKER_SYMBOL_FOR_THE_ETF1"
     ishares_etf_url: "URL_FOR_THE_ISHARES_ETF_NAME1"
     extraction_schedule: "@weekly" #used to define schedule of holdings extraction
+    tags:
+      - tech
+      - global
   INDEX_KEY2:
     description: "Write a description for the index you are doing your research about"
     ishares_etf_name: "Name of the iShares index 2"
     ishares_etf_ticker: "TICKER_SYMBOL_FOR_THE_ETF2"
     ishares_etf_url: "URL_FOR_THE_ISHARES_ETF_NAME2"
     extraction_schedule: "@weekly"
+    tags:
+      - us
+      - high-dividend

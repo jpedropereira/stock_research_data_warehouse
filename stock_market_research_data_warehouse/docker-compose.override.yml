@@ -53,6 +53,29 @@ services:
     networks:
       - airflow
 
+  # Browser service for web scraping with Playwright
+  browser-service:
+    image: mcr.microsoft.com/playwright:v1.48.0-jammy
+    container_name: browser-service
+    ports:
+      - "9222:9222"  # Chrome DevTools Protocol port
+    environment:
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    command: >
+      sh -c "
+        echo 'Installing Playwright browsers...' &&
+        npx playwright install chromium &&
+        echo 'Starting Playwright server...' &&
+        npx playwright run-server --port=9222 --host=0.0.0.0
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9222/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - airflow
+
 networks:
   airflow:
     driver: bridge
