@@ -1,7 +1,18 @@
 import logging
-import os
 from urllib.parse import urlparse
 
+from include.config import (
+    ISHARES_EXTRA_JS_WAIT_MS,
+    ISHARES_NAV_FALLBACK_TIMEOUT_MS,
+    ISHARES_NAV_TIMEOUT_MS,
+    ISHARES_PAGE_DEFAULT_TIMEOUT_MS,
+    ISHARES_QUICK_WAIT_MS,
+    ISHARES_SELECTOR_TIMEOUT_MS,
+)
+from include.web_scraping.constants import (
+    ANY_DOWNLOAD_SELECTORS,
+    CSV_HOLDINGS_SELECTORS,
+)
 from playwright.sync_api import Page
 
 from .base_service import WebScrapingService, get_page_with_url_overrides
@@ -22,12 +33,12 @@ def get_ishares_download_link(etf_url: str, file_type: str | None = None) -> str
         try:
             logger.info(f"Navigating to page: {etf_url}")
 
-            # Timeouts configurable via environment variables
-            default_timeout_ms = int(os.getenv("ISHARES_PAGE_DEFAULT_TIMEOUT_MS", "120000"))
-            nav_timeout_ms = int(os.getenv("ISHARES_NAV_TIMEOUT_MS", "120000"))
-            nav_fallback_timeout_ms = int(os.getenv("ISHARES_NAV_FALLBACK_TIMEOUT_MS", "90000"))
-            extra_js_wait_ms = int(os.getenv("ISHARES_EXTRA_JS_WAIT_MS", "5000"))
-            selector_timeout_ms = int(os.getenv("ISHARES_SELECTOR_TIMEOUT_MS", "30000"))
+            # Timeouts configurable via centralized config
+            default_timeout_ms = ISHARES_PAGE_DEFAULT_TIMEOUT_MS
+            nav_timeout_ms = ISHARES_NAV_TIMEOUT_MS
+            nav_fallback_timeout_ms = ISHARES_NAV_FALLBACK_TIMEOUT_MS
+            extra_js_wait_ms = ISHARES_EXTRA_JS_WAIT_MS
+            selector_timeout_ms = ISHARES_SELECTOR_TIMEOUT_MS
 
             page = get_page_with_url_overrides(scraper, etf_url)
             page.set_default_timeout(default_timeout_ms)
@@ -116,27 +127,19 @@ def get_ishares_download_link(etf_url: str, file_type: str | None = None) -> str
             except Exception as holdings_e:
                 logger.debug(f"Failed to get holdings section: {holdings_e}")
 
-            # Build selector list
+            # Build selector list (centralized in constants for easier updates)
             if file_type == "csv":
-                selectors = [
-                    '#holdings .fund-component-data-export a.icon-xls-export[href*="csv"]',
-                    '#holdings a.icon-xls-export[href*="holdings"]',
-                    "#holdings a.icon-xls-export",
-                    'a.icon-xls-export[href*="holdings&fileType=csv"]',
-                    'a.icon-xls-export[href*="fileType=csv"]',
-                    "a.icon-xls-export",
-                    'a[data-download-type="holdings"][href*="csv"]',
-                ]
+                selectors = CSV_HOLDINGS_SELECTORS
                 logger.info(f"Looking for CSV holdings download with {len(selectors)} selectors")
             else:
-                selectors = ["a.icon-xls-export"]
+                selectors = ANY_DOWNLOAD_SELECTORS
                 logger.info("Looking for any download link")
 
             logger.info("Waiting for download link to appear...")
             download_link = None
             successful_selector = None
 
-            quick_wait_ms = int(os.getenv("ISHARES_QUICK_WAIT_MS", "2500"))
+            quick_wait_ms = ISHARES_QUICK_WAIT_MS
             stable_targets = [
                 "#holdings .fund-component-data-export",
                 "#holdings",

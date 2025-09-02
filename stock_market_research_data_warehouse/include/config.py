@@ -41,6 +41,15 @@ def now_tz():
     return datetime.now(ZoneInfo(PIPELINE_TZ))
 
 
+# iShares (web scraping) timeouts (milliseconds)
+ISHARES_PAGE_DEFAULT_TIMEOUT_MS = int(os.getenv("ISHARES_PAGE_DEFAULT_TIMEOUT_MS", "120000"))
+ISHARES_NAV_TIMEOUT_MS = int(os.getenv("ISHARES_NAV_TIMEOUT_MS", "120000"))
+ISHARES_NAV_FALLBACK_TIMEOUT_MS = int(os.getenv("ISHARES_NAV_FALLBACK_TIMEOUT_MS", "90000"))
+ISHARES_EXTRA_JS_WAIT_MS = int(os.getenv("ISHARES_EXTRA_JS_WAIT_MS", "5000"))
+ISHARES_SELECTOR_TIMEOUT_MS = int(os.getenv("ISHARES_SELECTOR_TIMEOUT_MS", "30000"))
+ISHARES_QUICK_WAIT_MS = int(os.getenv("ISHARES_QUICK_WAIT_MS", "2500"))
+
+
 __all__ = [
     "ENV",
     "OWNER",
@@ -49,4 +58,11 @@ __all__ = [
     "STAGING_SCHEMA",
     "PIPELINE_TZ",
     "now_tz",
+    # iShares timeouts
+    "ISHARES_PAGE_DEFAULT_TIMEOUT_MS",
+    "ISHARES_NAV_TIMEOUT_MS",
+    "ISHARES_NAV_FALLBACK_TIMEOUT_MS",
+    "ISHARES_EXTRA_JS_WAIT_MS",
+    "ISHARES_SELECTOR_TIMEOUT_MS",
+    "ISHARES_QUICK_WAIT_MS",
 ]
