@@ -98,12 +98,11 @@ class BaseDAGFactory(ABC):
         for dag_args in self.dag_arguments_generator():
             globals()[dag_args["dag_id"]] = self.create_dag_template(**dag_args)
 
-    def create_master_dag(self, master_dag_id: str, dags_ids: list, default_args=None) -> None:
+    def create_master_dag(self, master_dag_id: str, default_args=None) -> None:
         """
         Create a master DAG that triggers all DAGs listed in dags_ids.
 
         Args:
-            dags_ids (list): List of DAG IDs to be triggered.
             master_dag_id (str): The DAG ID for the master DAG.
             default_args (dict): Default arguments for the master DAG.
 
@@ -129,7 +128,7 @@ class BaseDAGFactory(ABC):
             start_task = start_task()
             end_task = end_task()
             trigger_tasks = []
-            for dag_id in dags_ids:
+            for dag_id in self.dag_ids:
                 trigger = TriggerDagRunOperator(
                     task_id=f"trigger_{dag_id}",
                     trigger_dag_id=dag_id,

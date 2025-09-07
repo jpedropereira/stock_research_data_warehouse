@@ -56,20 +56,19 @@ class TestBaseDAGFactory:
     def test_create_master_dag_registers_master_and_triggers(self):
         factory = DummyDAGFactory("/dev/null")
         master_dag_id = "test_master_dag"
-        dags_ids = ["dag1", "dag2"]
 
         # Remove if already present in the dag_factory module namespace
         if hasattr(dag_factory_module, master_dag_id):
             delattr(dag_factory_module, master_dag_id)
 
         try:
-            factory.create_master_dag(master_dag_id, dags_ids)
+            factory.create_master_dag(master_dag_id)
             # Assert it's registered in the dag_factory module's global namespace
             assert hasattr(dag_factory_module, master_dag_id)
             master_dag = getattr(dag_factory_module, master_dag_id)
             # Check tasks exist
             task_ids = [t.task_id for t in master_dag.tasks]
-            for dag_id in dags_ids:
+            for dag_id in factory.dag_ids:
                 assert f"trigger_{dag_id}" in task_ids
             assert "start_task" in task_ids
             assert "end_task" in task_ids
