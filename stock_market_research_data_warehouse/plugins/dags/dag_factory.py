@@ -11,17 +11,19 @@ class BaseDAGFactory(ABC):
     Abstract base class for DAG factory implementations.
 
     Inherit from this class to create a factory that generates Airflow DAGs from configuration files.
-    Subclasses must implement the `create_dag_template` method, which defines the logic for creating a single DAG.
+    Subclasses must implement:
+        - `create_dag_template`: Defines the logic for creating a single DAG.
+        - `dag_arguments_generator`: Yields argument dictionaries for each DAG to be created.
 
     Args:
         configs_path (str): Path to a YAML file containing configuration for the DAGs to be created.
 
     Usage:
         1. Inherit from BaseDAGFactory.
-        2. Implement the `create_dag_template` method in your subclass. The implementation must return
-           a DAG object.
-        3. Use `create_dags` to register all DAGs in the global namespace for Airflow discovery.
-        4. Optionally, implement `create_master_dag` to create a DAG that triggers all generated DAGs.
+        2. Implement the `create_dag_template` method in your subclass. The implementation must return a DAG object.
+        3. Implement the `dag_arguments_generator` method to yield argument dicts for each DAG (must include 'dag_id').
+        4. Use `create_dags` to register all DAGs in the global namespace for Airflow discovery.
+        5. Optionally, implement `create_master_dag` to create a DAG that triggers all generated DAGs.
     """
 
     def __init__(self, configs_path: str):
@@ -59,6 +61,31 @@ class BaseDAGFactory(ABC):
             "create_dag_template() needs to be implemented for every subclass of BaseDAGFactory."
         )
 
+    @abstractmethod
+    def dag_arguments_generator(self, **kwargs):
+        """
+        Abstract generator method to yield argument dictionaries for DAG creation.
+
+        Each yielded dict must contain at least a 'dag_id' key and any other arguments required by
+        `create_dag_template`.
+
+        Yields:
+            dict: Arguments to be passed to `create_dag_template` for each DAG.
+
+        Example:
+            def dag_arguments_generator(self):
+                for index in self.configs:
+                    yield {
+                        "dag_id": f"extract_{index}_holdings",
+                        "index": index,
+                        "default_args": default_args,
+                        "schedule": self.configs.get(index).get("schedule", None)
+                    }
+        """
+        raise NotImplementedError(
+            "dag_arguments_generator() needs to be implemented for every subclass of BaseDAGFactory."
+        )
+
     def create_dags(self, dags_ids: list, **kwargs) -> None:
         """
         Create and register multiple DAGs in the global namespace.
@@ -70,8 +97,8 @@ class BaseDAGFactory(ABC):
         This method will call `create_dag_template` for each DAG ID and register the resulting DAG
         in the global namespace, making it discoverable by Airflow.
         """
-        for dag in dags_ids:
-            globals()[dag] = self.create_dag_template(**kwargs)
+        for dag_args in self.dag_arguments_generator():
+            globals()[dag_args["dag_id"]] = self.create_dag_template(**dag_args)
 
     def create_master_dag(self, master_dag_id: str, dags_ids: list, default_args=None) -> None:
         """
