@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 import yaml
 from airflow import DAG
+from airflow.decorators import task
+from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 
 
 class BaseDAGFactory(ABC):
@@ -71,14 +73,44 @@ class BaseDAGFactory(ABC):
         for dag in dags_ids:
             globals()[dag] = self.create_dag_template(**kwargs)
 
-    def create_master_dag(self, dags_ids: list) -> None:
+    def create_master_dag(self, master_dag_id: str, dags_ids: list, default_args=None) -> None:
         """
-        (To be implemented) Create a master DAG that triggers all DAGs created by this factory.
+        Create a master DAG that triggers all DAGs listed in dags_ids.
 
         Args:
-            dags_ids (list): List of DAG IDs to be included in the master DAG.
+            dags_ids (list): List of DAG IDs to be triggered.
+            master_dag_id (str): The DAG ID for the master DAG.
+            default_args (dict): Default arguments for the master DAG.
 
         Returns:
             None
         """
-        # TODO: implement method to create a DAG running all the dags created by the factory
+        master_dag = DAG(
+            dag_id=master_dag_id,
+            default_args=default_args or {},
+            tags=["master"],
+        )
+
+        with master_dag:
+
+            @task()
+            def start_task():
+                return None
+
+            @task()
+            def end_task():
+                return None
+
+            start_task = start_task()
+            end_task = end_task()
+            trigger_tasks = []
+            for dag_id in dags_ids:
+                trigger = TriggerDagRunOperator(
+                    task_id=f"trigger_{dag_id}",
+                    trigger_dag_id=dag_id,
+                )
+                trigger_tasks.append(trigger)
+
+            start_task >> trigger_tasks >> end_task
+
+        globals()[master_dag_id] = master_dag
