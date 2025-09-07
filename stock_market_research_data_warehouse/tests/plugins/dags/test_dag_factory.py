@@ -30,6 +30,10 @@ class TestBaseDAGFactory:
         finally:
             os.remove(tmp_path)
 
+    def test_dag_ids_gets_correctly_generated(self):
+        factory = DummyDAGFactory("/dev/null")
+        assert factory.dag_ids == ["dag1", "dag2"]
+
     def test_abstract_method_raises(self):
         with pytest.raises(TypeError):
             BaseDAGFactory("some_path")
@@ -38,7 +42,7 @@ class TestBaseDAGFactory:
         factory = DummyDAGFactory("/dev/null")
         fake_globals = {}
         with patch("builtins.globals", return_value=fake_globals):
-            factory.create_dags([])  # dag_ids is ignored in new logic
+            factory.create_dags()
             assert fake_globals["dag1"] == "dummy_dag1"
             assert fake_globals["dag2"] == "dummy_dag2"
 
