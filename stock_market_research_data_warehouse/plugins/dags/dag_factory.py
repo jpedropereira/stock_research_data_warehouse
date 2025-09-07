@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import yaml
+from airflow import DAG
 
 
 class BaseDAGFactory(ABC):
@@ -15,7 +16,8 @@ class BaseDAGFactory(ABC):
 
     Usage:
         1. Inherit from BaseDAGFactory.
-        2. Implement the `create_dag_template` method in your subclass.
+        2. Implement the `create_dag_template` method in your subclass. The implementation must return
+           a DAG object.
         3. Use `create_dags` to register all DAGs in the global namespace for Airflow discovery.
         4. Optionally, implement `create_master_dag` to create a DAG that triggers all generated DAGs.
     """
@@ -39,7 +41,7 @@ class BaseDAGFactory(ABC):
         return configs
 
     @abstractmethod
-    def create_dag_template(self, **kwargs):
+    def create_dag_template(self, **kwargs) -> DAG:
         """
         Abstract method to define the logic for creating a single DAG.
 
@@ -49,7 +51,7 @@ class BaseDAGFactory(ABC):
             **kwargs: Arbitrary keyword arguments required for DAG creation.
 
         Returns:
-            Any: The created DAG object (typically an Airflow DAG).
+            DAG: The created DAG object.
         """
         raise NotImplementedError(
             "create_dag_template() needs to be implemented for every subclass of BaseDAGFactory."
