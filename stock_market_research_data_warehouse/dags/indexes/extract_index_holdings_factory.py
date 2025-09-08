@@ -100,7 +100,7 @@ class ExtractIndexesHoldingsDAGFactory(BaseDAGFactory):
                 file_name = f"{timestamp}_{index}_holdings.csv"
 
                 logging.info(
-                    f"Writting {index} holdings in bucket {BUCKET_INDEXES_ISHARES_HOLDINGS} {file_name}"
+                    f"Writing {index} holdings in bucket {BUCKET_INDEXES_ISHARES_HOLDINGS} {file_name}"
                 )
 
                 with NamedTemporaryFile(suffix=".csv") as tmp:
@@ -159,7 +159,7 @@ class ExtractIndexesHoldingsDAGFactory(BaseDAGFactory):
                 >> end_task
             )
 
-            return dag
+        return dag
 
     def dag_arguments_generator(self):
         for index in self.configs:

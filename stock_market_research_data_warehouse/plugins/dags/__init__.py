@@ -1,4 +1,4 @@
-"""Custom Airflow dag pluggins for the stock market research data warehouse.
+"""Custom Airflow dag plugins for the stock market research data warehouse.
 This file simplifies the import structure for staging operations.
 You can use:
 from plugins.dags import BaseDAGFactory
