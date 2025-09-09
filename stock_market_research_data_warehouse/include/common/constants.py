@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from stock_market_research_data_warehouse.include.config import OWNER
+from include.config import OWNER
 
 COMMON_ARGS = {
     "owner": OWNER,
