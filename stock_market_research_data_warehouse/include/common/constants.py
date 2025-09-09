@@ -9,3 +9,6 @@ COMMON_ARGS = {
     "depends_on_past": False,
     "schedule": None,
 }
+
+MINIO_CONN_ID = "minio_conn"
+POSTGRES_CONN_ID = "datawarehouse_conn"
