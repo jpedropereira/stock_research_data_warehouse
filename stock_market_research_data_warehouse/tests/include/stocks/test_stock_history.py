@@ -4,8 +4,10 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 from include.stocks.stock_history import (
+    get_batch_size,
     get_index_symbols_from_wikipedia,
     get_stocks_historical_data,
+    yield_tickers_batches,
 )
 
 
@@ -58,6 +60,48 @@ class TestGetIndexSymbolsFromWikipedia:
             mock_read_html.return_value = [empty_dataframe]
             with pytest.raises(ValueError, match="No ticker symbols found in the table."):
                 get_index_symbols_from_wikipedia(sample_url)
+
+
+class TestGetBatchSize:
+    def test_one_day(self):
+        assert get_batch_size(start_date="2025-09-11", end_date="2025-09-12") == 50
+
+    def test_four_months(self):
+        assert get_batch_size(start_date="2025-05-12", end_date="2025-09-12") == 20
+
+    def test_15_months(self):
+        assert get_batch_size(start_date="2024-06-12", end_date="2025-09-12") == 10
+
+    def test_6_years(self):
+        assert get_batch_size(start_date="2019-09-12", end_date="2025-09-12") == 5
+
+
+class TestYeldTickersBatches:
+    def test_yield_tickers_batches_exact_multiple(self):
+        tickers = [f"TICKER{i}" for i in range(100)]
+        batches = list(yield_tickers_batches(tickers, batch_size=20))
+        assert len(batches) == 5
+        for batch in batches:
+            assert len(batch) == 20
+
+    def test_yield_tickers_batches_non_multiple(self):
+        tickers = [f"TICKER{i}" for i in range(53)]
+        batches = list(yield_tickers_batches(tickers, batch_size=20))
+        assert len(batches) == 3
+        assert len(batches[0]) == 20
+        assert len(batches[1]) == 20
+        assert len(batches[2]) == 13
+
+    def test_yield_tickers_batches_batch_size_greater_than_list(self):
+        tickers = [f"TICKER{i}" for i in range(10)]
+        batches = list(yield_tickers_batches(tickers, batch_size=20))
+        assert len(batches) == 1
+        assert batches[0] == tickers
+
+    def test_yield_tickers_batches_empty_list(self):
+        tickers = []
+        batches = list(yield_tickers_batches(tickers, batch_size=10))
+        assert batches == []
 
 
 class TestGetStocksHistoricalData:

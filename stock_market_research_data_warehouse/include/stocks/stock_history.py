@@ -19,6 +19,25 @@ def get_index_symbols_from_wikipedia(url: str) -> list[str]:
     return symbols
 
 
+def get_batch_size(start_date: str, end_date: str) -> int:
+    start = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+    days = (end - start).days
+    if days <= 90:
+        return 50
+    elif days <= 365:
+        return 20
+    elif days <= 5 * 365:
+        return 10
+    else:
+        return 5
+
+
+def yield_tickers_batches(tickers: list, batch_size: int = 50):
+    for i in range(0, len(tickers), batch_size):
+        yield tickers[i : i + batch_size]
+
+
 def get_stocks_historical_data(
     symbols: list[str],
     start_date: str,
