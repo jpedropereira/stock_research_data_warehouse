@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-from include.stocks.index_history import (
+from include.stocks.stock_history import (
     get_index_symbols_from_wikipedia,
     get_stocks_historical_data,
 )
@@ -56,9 +56,7 @@ class TestGetIndexSymbolsFromWikipedia:
     def test_empty_dataframe(self, sample_url, empty_dataframe):
         with patch("pandas.read_html") as mock_read_html:
             mock_read_html.return_value = [empty_dataframe]
-            with pytest.raises(
-                ValueError, match="No ticker symbols found in the table."
-            ):
+            with pytest.raises(ValueError, match="No ticker symbols found in the table."):
                 get_index_symbols_from_wikipedia(sample_url)
 
 
@@ -98,9 +96,7 @@ class TestGetStocksHistoricalData:
         data.index.name = "Date"
         return data
 
-    def test_success_case_multiindex(
-        self, sample_symbols, mock_yfinance_multiindex_data
-    ):
+    def test_success_case_multiindex(self, sample_symbols, mock_yfinance_multiindex_data):
         with patch("yfinance.download") as mock_download:
             mock_download.return_value = mock_yfinance_multiindex_data
 
@@ -193,12 +189,8 @@ class TestGetStocksHistoricalData:
 
     def test_empty_symbols_list(self):
         # Test the new validation for empty symbols list
-        with pytest.raises(
-            ValueError, match="No symbols provided for historical data retrieval."
-        ):
-            get_stocks_historical_data(
-                symbols=[], start_date="2025-01-01", end_date="2025-01-02"
-            )
+        with pytest.raises(ValueError, match="No symbols provided for historical data retrieval."):
+            get_stocks_historical_data(symbols=[], start_date="2025-01-01", end_date="2025-01-02")
 
     def test_start_date_after_end_date(self):
         with pytest.raises(ValueError, match="Start date must be before end date."):
@@ -214,9 +206,7 @@ class TestGetStocksHistoricalData:
                 symbols=["TCKR"], start_date=future_date, end_date=future_end_date
             )
 
-    def test_date_parameters_passed_correctly(
-        self, sample_symbols, mock_yfinance_multiindex_data
-    ):
+    def test_date_parameters_passed_correctly(self, sample_symbols, mock_yfinance_multiindex_data):
         with patch("yfinance.download") as mock_download:
             mock_download.return_value = mock_yfinance_multiindex_data
 
@@ -228,9 +218,7 @@ class TestGetStocksHistoricalData:
             )
 
             # Verify dates are passed correctly to yfinance
-            mock_download.assert_called_once_with(
-                sample_symbols, start=start_date, end=end_date
-            )
+            mock_download.assert_called_once_with(sample_symbols, start=start_date, end=end_date)
 
     def test_empty_dataframe_from_yfinance(self):
         with patch("yfinance.download") as mock_download:

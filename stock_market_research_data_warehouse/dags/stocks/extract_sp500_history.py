@@ -8,7 +8,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from include.config import PROJECT_ROOT, STAGING_SCHEMA, now_tz
 from include.stocks.constants import BUCKET_STOCKS_YAHOO_FINANCE
-from include.stocks.index_history import (
+from include.stocks.stock_history import (
     get_index_symbols_from_wikipedia,
     get_stocks_historical_data,
 )
