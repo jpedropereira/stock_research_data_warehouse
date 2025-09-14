@@ -83,7 +83,7 @@ with dag:
     end_task = end_task()
 
     @task
-    def seed_yfinance_sufixes():
+    def seed_yfinance_suffixes():
         hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
         # TODO: Replace with dbt seed once dbt is introduced"""
 
@@ -105,7 +105,7 @@ with dag:
         )
         hook.copy_expert(sql=copy_command, filename=seed_path)
 
-    seed_yfinance_sufixes = seed_yfinance_sufixes()
+    seed_yfinance_suffixes = seed_yfinance_suffixes()
 
     @task()
     def get_index_stock_tickers():
@@ -198,8 +198,8 @@ with dag:
         column_mapping_yaml_path=yaml_path,
     )
 
-    enforce_lastest_files = EnforceLatestFileOperator(
-        task_id="enforce_lastest_files",
+    enforce_latest_files = EnforceLatestFileOperator(
+        task_id="enforce_latest_files",
         postgres_conn_id="datawarehouse_conn",
         deduplication_columns=["date", "ticker"],
         schema_name=STAGING_SCHEMA,
@@ -208,11 +208,11 @@ with dag:
 
     (
         start_task
-        >> seed_yfinance_sufixes
+        >> seed_yfinance_suffixes
         >> get_index_stock_tickers
         >> extract_tickers_history
         >> create_table
         >> load_to_staging
-        >> enforce_lastest_files
+        >> enforce_latest_files
         >> end_task
     )
