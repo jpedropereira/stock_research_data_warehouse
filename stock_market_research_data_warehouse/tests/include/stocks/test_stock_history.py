@@ -3,63 +3,53 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-from include.stocks.index_history import (
-    get_index_symbols_from_wikipedia,
+from include.stocks.stock_history import (
+    get_batch_size,
     get_stocks_historical_data,
+    yield_tickers_batches,
 )
 
 
-class TestGetIndexSymbolsFromWikipedia:
-    @pytest.fixture
-    def sample_url(self):
-        return "https://test-wiki.com/test-sp500"
+class TestGetBatchSize:
+    def test_one_day(self):
+        assert get_batch_size(start_date="2025-09-11", end_date="2025-09-12") == 50
 
-    @pytest.fixture
-    def valid_dataframe(self):
-        """Valid DataFrame with Symbol column."""
-        return pd.DataFrame(
-            {
-                "Symbol": ["AAA", "BBB", "CCC", "DDD"],
-                "Company": ["CompanyA", "CompanyB", "CompanyC", "CompanyD"],
-                "Sector": ["SectorX", "SectorY", "SectorX", "SectorZ"],
-            }
-        )
+    def test_four_months(self):
+        assert get_batch_size(start_date="2025-05-12", end_date="2025-09-12") == 20
 
-    def test_success_case(self, sample_url, valid_dataframe):
-        with patch("pandas.read_html") as mock_read_html:
-            mock_read_html.return_value = [valid_dataframe]
-            result = get_index_symbols_from_wikipedia(sample_url)
-            assert result == ["AAA", "BBB", "CCC", "DDD"]
-            mock_read_html.assert_called_once_with(sample_url)
+    def test_15_months(self):
+        assert get_batch_size(start_date="2024-06-12", end_date="2025-09-12") == 10
 
-    @pytest.fixture
-    def invalid_dataframe(self):
-        """Invalid DataFrame missing 'Symbol' column"""
-        return pd.DataFrame(
-            {
-                "Ticker": ["XXX", "YYY"],  # Wrong column name
-                "Company": ["CompanyX", "CompanyY"],
-            }
-        )
+    def test_6_years(self):
+        assert get_batch_size(start_date="2019-09-12", end_date="2025-09-12") == 5
 
-    def test_missing_symbol_column(self, sample_url, invalid_dataframe):
-        with patch("pandas.read_html") as mock_read_html:
-            mock_read_html.return_value = [invalid_dataframe]
-            with pytest.raises(ValueError, match="Column 'Symbol' not found"):
-                get_index_symbols_from_wikipedia(sample_url)
 
-    @pytest.fixture
-    def empty_dataframe(self):
-        """Empty DataFrame with Symbol column only."""
-        return pd.DataFrame(columns=["Symbol"])
+class TestYieldTickersBatches:
+    def test_yield_tickers_batches_exact_multiple(self):
+        tickers = [f"TICKER{i}" for i in range(100)]
+        batches = list(yield_tickers_batches(tickers, batch_size=20))
+        assert len(batches) == 5
+        for batch in batches:
+            assert len(batch) == 20
 
-    def test_empty_dataframe(self, sample_url, empty_dataframe):
-        with patch("pandas.read_html") as mock_read_html:
-            mock_read_html.return_value = [empty_dataframe]
-            with pytest.raises(
-                ValueError, match="No ticker symbols found in the table."
-            ):
-                get_index_symbols_from_wikipedia(sample_url)
+    def test_yield_tickers_batches_non_multiple(self):
+        tickers = [f"TICKER{i}" for i in range(53)]
+        batches = list(yield_tickers_batches(tickers, batch_size=20))
+        assert len(batches) == 3
+        assert len(batches[0]) == 20
+        assert len(batches[1]) == 20
+        assert len(batches[2]) == 13
+
+    def test_yield_tickers_batches_batch_size_greater_than_list(self):
+        tickers = [f"TICKER{i}" for i in range(10)]
+        batches = list(yield_tickers_batches(tickers, batch_size=20))
+        assert len(batches) == 1
+        assert batches[0] == tickers
+
+    def test_yield_tickers_batches_empty_list(self):
+        tickers = []
+        batches = list(yield_tickers_batches(tickers, batch_size=10))
+        assert batches == []
 
 
 class TestGetStocksHistoricalData:
@@ -98,9 +88,7 @@ class TestGetStocksHistoricalData:
         data.index.name = "Date"
         return data
 
-    def test_success_case_multiindex(
-        self, sample_symbols, mock_yfinance_multiindex_data
-    ):
+    def test_success_case_multiindex(self, sample_symbols, mock_yfinance_multiindex_data):
         with patch("yfinance.download") as mock_download:
             mock_download.return_value = mock_yfinance_multiindex_data
 
@@ -110,7 +98,7 @@ class TestGetStocksHistoricalData:
 
             # Verify the function was called correctly
             mock_download.assert_called_once_with(
-                sample_symbols, start="2025-01-01", end="2025-01-03"
+                sample_symbols, start="2025-01-01", end="2025-01-03", progress=False, threads=True
             )
 
             # Verify DataFrame structure
@@ -193,12 +181,8 @@ class TestGetStocksHistoricalData:
 
     def test_empty_symbols_list(self):
         # Test the new validation for empty symbols list
-        with pytest.raises(
-            ValueError, match="No symbols provided for historical data retrieval."
-        ):
-            get_stocks_historical_data(
-                symbols=[], start_date="2025-01-01", end_date="2025-01-02"
-            )
+        with pytest.raises(ValueError, match="No symbols provided for historical data retrieval."):
+            get_stocks_historical_data(symbols=[], start_date="2025-01-01", end_date="2025-01-02")
 
     def test_start_date_after_end_date(self):
         with pytest.raises(ValueError, match="Start date must be before end date."):
@@ -214,9 +198,7 @@ class TestGetStocksHistoricalData:
                 symbols=["TCKR"], start_date=future_date, end_date=future_end_date
             )
 
-    def test_date_parameters_passed_correctly(
-        self, sample_symbols, mock_yfinance_multiindex_data
-    ):
+    def test_date_parameters_passed_correctly(self, sample_symbols, mock_yfinance_multiindex_data):
         with patch("yfinance.download") as mock_download:
             mock_download.return_value = mock_yfinance_multiindex_data
 
@@ -229,7 +211,7 @@ class TestGetStocksHistoricalData:
 
             # Verify dates are passed correctly to yfinance
             mock_download.assert_called_once_with(
-                sample_symbols, start=start_date, end=end_date
+                sample_symbols, start=start_date, end=end_date, progress=False, threads=True
             )
 
     def test_empty_dataframe_from_yfinance(self):

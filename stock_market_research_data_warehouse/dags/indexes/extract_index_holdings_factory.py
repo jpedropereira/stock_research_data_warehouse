@@ -7,12 +7,9 @@ from airflow import DAG
 from airflow.decorators import task
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from include.common.constants import COMMON_ARGS, MINIO_CONN_ID, POSTGRES_CONN_ID
 from include.config import PROJECT_ROOT, STAGING_SCHEMA, now_tz
-from include.indexes.constants import (
-    BUCKET_INDEXES_ISHARES_HOLDINGS,
-    COL_MAPPINGS,
-    COMMON_ARGS,
-)
+from include.indexes.constants import BUCKET_INDEXES_ISHARES_HOLDINGS, COL_MAPPINGS
 from include.indexes.index_holdings import (
     get_ishares_etf_holdings,
     get_ishares_etf_holdings_csv_url,
@@ -92,7 +89,7 @@ class ExtractIndexesHoldingsDAGFactory(BaseDAGFactory):
             def get_ishares_holdings_data(csv_url: str) -> str:
                 logging.info(f"Reading holdings url for {index} index from {csv_url}")
 
-                s3_hook = S3Hook(aws_conn_id="minio_conn")
+                s3_hook = S3Hook(aws_conn_id=MINIO_CONN_ID)
                 data = get_ishares_etf_holdings(csv_url)
                 data["extraction_datetime"] = now_tz()
 
@@ -129,9 +126,9 @@ class ExtractIndexesHoldingsDAGFactory(BaseDAGFactory):
 
             load_to_staging = ExtractToStagingOperator(
                 task_id="load_to_staging",
-                s3_conn_id="minio_conn",
+                s3_conn_id=MINIO_CONN_ID,
                 bucket_name=BUCKET_INDEXES_ISHARES_HOLDINGS,
-                postgres_conn_id="datawarehouse_conn",
+                postgres_conn_id=POSTGRES_CONN_ID,
                 schema_name=STAGING_SCHEMA,
                 table_name=self.table_name,
                 column_mapping_yaml_path=tables_yaml_path,
@@ -142,7 +139,7 @@ class ExtractIndexesHoldingsDAGFactory(BaseDAGFactory):
 
             enforce_latest_files = EnforceLatestFileOperator(
                 task_id="enforce_latest_files",
-                postgres_conn_id="datawarehouse_conn",
+                postgres_conn_id=POSTGRES_CONN_ID,
                 deduplication_columns=["index", "ticker"],
                 schema_name=STAGING_SCHEMA,
                 table_name=self.table_name,
