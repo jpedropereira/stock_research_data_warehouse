@@ -2,41 +2,6 @@
 # ddl should contain the table definition
 # columns should map the table column to the file column and its data type
 tables:
-  historical_data_sp500:
-    ddl: |
-      CREATE TABLE IF NOT EXISTS {{schema}}.historical_data_sp500 (
-          date DATE NOT NULL,
-          ticker VARCHAR(10) NOT NULL,
-          open_price DECIMAL(12,4),
-          high_price DECIMAL(12,4),
-          low_price DECIMAL(12,4),
-          close_price DECIMAL(12,4),
-          volume BIGINT,
-          load_timestamp TIMESTAMP WITH TIME ZONE,
-          file_name VARCHAR(255)
-      );
-    columns:
-      date:
-        csv_col: date
-        df_dtype: str
-      ticker:
-        csv_col: ticker
-        df_dtype: str
-      open_price:
-        csv_col: open
-        df_dtype: float
-      high_price:
-        csv_col: high
-        df_dtype: float
-      low_price:
-        csv_col: low
-        df_dtype: float
-      close_price:
-        csv_col: close
-        df_dtype: float
-      volume:
-        csv_col: volume
-        df_dtype: int
   index_holdings:
     ddl: |
       CREATE TABLE IF NOT EXISTS {{schema}}.index_holdings (
