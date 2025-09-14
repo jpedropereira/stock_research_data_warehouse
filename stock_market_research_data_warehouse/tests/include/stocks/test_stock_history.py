@@ -5,61 +5,9 @@ import pandas as pd
 import pytest
 from include.stocks.stock_history import (
     get_batch_size,
-    get_index_symbols_from_wikipedia,
     get_stocks_historical_data,
     yield_tickers_batches,
 )
-
-
-class TestGetIndexSymbolsFromWikipedia:
-    @pytest.fixture
-    def sample_url(self):
-        return "https://test-wiki.com/test-sp500"
-
-    @pytest.fixture
-    def valid_dataframe(self):
-        """Valid DataFrame with Symbol column."""
-        return pd.DataFrame(
-            {
-                "Symbol": ["AAA", "BBB", "CCC", "DDD"],
-                "Company": ["CompanyA", "CompanyB", "CompanyC", "CompanyD"],
-                "Sector": ["SectorX", "SectorY", "SectorX", "SectorZ"],
-            }
-        )
-
-    def test_success_case(self, sample_url, valid_dataframe):
-        with patch("pandas.read_html") as mock_read_html:
-            mock_read_html.return_value = [valid_dataframe]
-            result = get_index_symbols_from_wikipedia(sample_url)
-            assert result == ["AAA", "BBB", "CCC", "DDD"]
-            mock_read_html.assert_called_once_with(sample_url)
-
-    @pytest.fixture
-    def invalid_dataframe(self):
-        """Invalid DataFrame missing 'Symbol' column"""
-        return pd.DataFrame(
-            {
-                "Ticker": ["XXX", "YYY"],  # Wrong column name
-                "Company": ["CompanyX", "CompanyY"],
-            }
-        )
-
-    def test_missing_symbol_column(self, sample_url, invalid_dataframe):
-        with patch("pandas.read_html") as mock_read_html:
-            mock_read_html.return_value = [invalid_dataframe]
-            with pytest.raises(ValueError, match="Column 'Symbol' not found"):
-                get_index_symbols_from_wikipedia(sample_url)
-
-    @pytest.fixture
-    def empty_dataframe(self):
-        """Empty DataFrame with Symbol column only."""
-        return pd.DataFrame(columns=["Symbol"])
-
-    def test_empty_dataframe(self, sample_url, empty_dataframe):
-        with patch("pandas.read_html") as mock_read_html:
-            mock_read_html.return_value = [empty_dataframe]
-            with pytest.raises(ValueError, match="No ticker symbols found in the table."):
-                get_index_symbols_from_wikipedia(sample_url)
 
 
 class TestGetBatchSize:
@@ -76,7 +24,7 @@ class TestGetBatchSize:
         assert get_batch_size(start_date="2019-09-12", end_date="2025-09-12") == 5
 
 
-class TestYeldTickersBatches:
+class TestYieldTickersBatches:
     def test_yield_tickers_batches_exact_multiple(self):
         tickers = [f"TICKER{i}" for i in range(100)]
         batches = list(yield_tickers_batches(tickers, batch_size=20))
@@ -150,7 +98,7 @@ class TestGetStocksHistoricalData:
 
             # Verify the function was called correctly
             mock_download.assert_called_once_with(
-                sample_symbols, start="2025-01-01", end="2025-01-03"
+                sample_symbols, start="2025-01-01", end="2025-01-03", progress=False, threads=True
             )
 
             # Verify DataFrame structure
@@ -262,7 +210,9 @@ class TestGetStocksHistoricalData:
             )
 
             # Verify dates are passed correctly to yfinance
-            mock_download.assert_called_once_with(sample_symbols, start=start_date, end=end_date)
+            mock_download.assert_called_once_with(
+                sample_symbols, start=start_date, end=end_date, progress=False, threads=True
+            )
 
     def test_empty_dataframe_from_yfinance(self):
         with patch("yfinance.download") as mock_download:

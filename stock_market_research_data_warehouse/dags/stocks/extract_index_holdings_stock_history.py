@@ -40,7 +40,7 @@ Schedule: Daily at noon, Monday to Friday (no weekends)
 dag_args = {
     "start_date": datetime(2025, 9, 9, 1),
     "catchup": False,
-    "retries": 2,
+    "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
 
@@ -63,7 +63,7 @@ dag = DAG(
 )
 
 holdings_table_name = "index_holdings"
-sufix_table_name = "yfinance_sufixes"
+sufix_table_name = "yfinance_suffixes"
 
 yaml_path = path.join(PROJECT_ROOT, "include", "raw_files_column_mappings.yaml")
 table_name = "stock_historical_data"
@@ -98,7 +98,7 @@ with dag:
 
         hook.run(f"TRUNCATE {STAGING_SCHEMA}.{sufix_table_name};")
 
-        seed_path = path.join(PROJECT_ROOT, "include", "seeds", "yfinance_sufixes.csv")
+        seed_path = path.join(PROJECT_ROOT, "include", "seeds", "yfinance_suffixes.csv")
 
         copy_command = (
             f"COPY  {STAGING_SCHEMA}.{sufix_table_name} FROM STDIN DELIMITER ',' CSV HEADER;"
