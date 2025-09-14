@@ -21,6 +21,21 @@ from include.stocks.stock_history import (
 from include.utils import render_ddl
 from plugins.operators import EnforceLatestFileOperator, ExtractToStagingOperator
 
+doc_md_DAG = """
+### extract_index_holdings_ticker_history
+
+This DAG extracts historical stock data for index holdings tickers from Yahoo Finance,
+batches requests to avoid API throttling, and loads the results into MinIO/S3 and a Postgres staging table.
+
+Features:
+- Dynamically determines batch size based on requested date range
+- Handles large ticker lists efficiently
+- Uploads consolidated results to cloud storage
+- Loads data into staging table for further processing
+
+Schedule: Daily at noon, Monday to Friday (no weekends)
+"""
+
 # Define the default configuration
 dag_args = {
     "start_date": datetime(2025, 9, 9, 1),
@@ -44,6 +59,7 @@ dag = DAG(
         "extract_start_date": (now_tz() - timedelta(days=1)).strftime("%Y-%m-%d"),
         "extract_end_date": now_tz().strftime("%Y-%m-%d"),
     },
+    doc_md=doc_md_DAG,
 )
 
 holdings_table_name = "index_holdings"
